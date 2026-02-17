@@ -56,7 +56,7 @@
     "@radix-ui/react-toast": "^1.2.4",
     "@swc/helpers": "^0.5.18",
     "@tailwindcss/postcss": "^4.1.18",
-    "@upstash/redis": "^1.36.0",
+    "@upstash/redis": "^1.36.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "fast-xml-parser": "^5.3.3",
