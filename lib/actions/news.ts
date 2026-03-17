@@ -145,13 +145,15 @@ export async function getUserCustomNews(): Promise<NewsItem[]> {
 
     results.forEach((result, index) => {
       if (result.status === 'fulfilled') {
+        const sourceName = enabledSources[index]?.name || 'Unknown Source'
         const itemsWithSource = result.value.map((item) => ({
           ...item,
-          source: item.source || enabledSources[index].name,
+          source: item.source || sourceName,
         }))
         allItems.push(...itemsWithSource)
       } else {
-        console.error(`Failed to fetch RSS source ${enabledSources[index].url}:`, result.reason)
+        const failedUrl = enabledSources[index]?.url || 'unknown url'
+        console.error(`Failed to fetch RSS source ${failedUrl}:`, result.reason)
       }
     })
 

@@ -87,7 +87,7 @@ export async function saveUserSettings(settings: Partial<UserSettings>): Promise
     await setStorageItem(key, mergedSettings)
   } catch (error) {
     console.error('Failed to save user settings:', error)
-    throw new Error('Failed to save settings')
+    throw new Error('Failed to save settings', { cause: error })
   }
 }
 
@@ -106,7 +106,7 @@ export async function resetUserSettings(): Promise<void> {
     await setStorageItem(key, DEFAULT_SETTINGS)
   } catch (error) {
     console.error('Failed to reset user settings:', error)
-    throw new Error('Failed to reset settings')
+    throw new Error('Failed to reset settings', { cause: error })
   }
 }
 

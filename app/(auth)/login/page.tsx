@@ -1,4 +1,5 @@
 import { signIn } from '@/lib/auth'
+import Link from 'next/link'
 
 export default async function LoginPage({
   searchParams,
@@ -63,9 +64,9 @@ export default async function LoginPage({
         </div>
 
         <div className="mt-6 text-center">
-          <a href="/" className="text-sm text-blue-600 hover:text-blue-500 dark:text-blue-400">
+          <Link href="/" className="text-sm text-blue-600 hover:text-blue-500 dark:text-blue-400">
             继续浏览（无需登录）
-          </a>
+          </Link>
         </div>
       </div>
     </div>

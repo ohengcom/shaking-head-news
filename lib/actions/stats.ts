@@ -46,6 +46,7 @@ export async function recordRotation(angle: number, duration: number) {
     }
 
     const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD
+    if (!today) throw new Error('Failed to generate date string')
     const key = StorageKeys.userStats(session.user.id, today)
 
     const existingStats = await getStorageItem<UserStats>(key)
@@ -139,6 +140,7 @@ export async function getStats(startDate: string, endDate: string) {
     const dateStrings: string[] = []
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
       const dateStr = d.toISOString().split('T')[0]
+      if (!dateStr) continue
       dateStrings.push(dateStr)
       dateKeys.push(StorageKeys.userStats(session.user.id, dateStr))
     }
@@ -175,6 +177,7 @@ export async function getStats(startDate: string, endDate: string) {
  */
 export async function getTodayStats() {
   const today = new Date().toISOString().split('T')[0]
+  if (!today) return null
   const stats = await getStats(today, today)
   return stats[0] || null
 }
@@ -191,6 +194,10 @@ export async function getWeekStats() {
   const startDate = weekAgo.toISOString().split('T')[0]
   const endDate = today.toISOString().split('T')[0]
 
+  if (!startDate || !endDate) {
+    throw new Error('Failed to generate date strings')
+  }
+
   return await getStats(startDate, endDate)
 }
 
@@ -205,6 +212,10 @@ export async function getMonthStats() {
 
   const startDate = monthAgo.toISOString().split('T')[0]
   const endDate = today.toISOString().split('T')[0]
+
+  if (!startDate || !endDate) {
+    throw new Error('Failed to generate date strings')
+  }
 
   return await getStats(startDate, endDate)
 }
@@ -290,6 +301,8 @@ export async function checkHealthReminder() {
 
   // 获取最后一次旋转时间
   const lastRecord = todayStats.records[todayStats.records.length - 1]
+  if (!lastRecord) return { shouldRemind: false, lastRotationTime: null }
+
   const lastRotationTime = lastRecord.timestamp
   const now = Date.now()
   const twoHoursInMs = 2 * 60 * 60 * 1000

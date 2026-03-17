@@ -77,9 +77,10 @@ export function RSSSourceList({ initialSources }: RSSSourceListProps) {
 
     const newSources = [...sources]
     const [removed] = newSources.splice(draggedIndex, 1)
-    newSources.splice(targetIndex, 0, removed)
-
-    setSources(newSources)
+    if (removed) {
+      newSources.splice(targetIndex, 0, removed)
+      setSources(newSources)
+    }
   }
 
   const handleDragEnd = async () => {

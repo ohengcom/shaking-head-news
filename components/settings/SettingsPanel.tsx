@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { useFormStatus } from 'react-dom'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { updateSettings, resetSettings } from '@/lib/actions/settings'
 import { useToast } from '@/hooks/use-toast'
@@ -67,10 +68,29 @@ function LockedSettingItem({
   )
 }
 
+function SaveButton({ label }: { label: string }) {
+  const { pending } = useFormStatus()
+  return (
+    <Button type="submit" disabled={pending} className="flex-1">
+      {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+      {label}
+    </Button>
+  )
+}
+
+function ResetButton({ label, action }: { label: string; action: () => void }) {
+  const { pending } = useFormStatus()
+  return (
+    <Button formAction={action} disabled={pending} variant="outline">
+      {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+      {!pending && <RotateCcw className="mr-2 h-4 w-4" />}
+      {label}
+    </Button>
+  )
+}
+
 export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
   const [settings, setSettings] = useState<UserSettings>(initialSettings)
-  const [isPending, startTransition] = useTransition()
-  const [isResetting, startResetTransition] = useTransition()
   const { toast } = useToast()
   const t = useTranslations('settings')
   const tTier = useTranslations('tier')
@@ -117,59 +137,55 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
     setRotationInterval,
   ])
 
-  const handleSave = () => {
-    startTransition(async () => {
-      try {
-        const result = await updateSettings(settings)
+  const handleSaveAction = async () => {
+    try {
+      const result = await updateSettings(settings)
 
-        if (result.success) {
-          toast({
-            title: t('saveSuccess'),
-            description: t('saveSuccessDescription'),
-          })
-        } else {
-          toast({
-            title: t('saveError'),
-            description: result.error || t('saveErrorDescription'),
-            variant: 'destructive',
-          })
-        }
-      } catch {
+      if (result.success) {
+        toast({
+          title: t('saveSuccess'),
+          description: t('saveSuccessDescription'),
+        })
+      } else {
         toast({
           title: t('saveError'),
-          description: t('saveErrorDescription'),
+          description: result.error || t('saveErrorDescription'),
           variant: 'destructive',
         })
       }
-    })
+    } catch {
+      toast({
+        title: t('saveError'),
+        description: t('saveErrorDescription'),
+        variant: 'destructive',
+      })
+    }
   }
 
-  const handleReset = () => {
-    startResetTransition(async () => {
-      try {
-        const result = await resetSettings()
+  const handleResetAction = async () => {
+    try {
+      const result = await resetSettings()
 
-        if (result.success && result.settings) {
-          setSettings(result.settings)
-          toast({
-            title: t('saveSuccess'),
-            description: t('saveSuccessDescription'),
-          })
-        } else {
-          toast({
-            title: t('saveError'),
-            description: result.error || t('saveErrorDescription'),
-            variant: 'destructive',
-          })
-        }
-      } catch {
+      if (result.success && result.settings) {
+        setSettings(result.settings)
+        toast({
+          title: t('saveSuccess'),
+          description: t('saveSuccessDescription'),
+        })
+      } else {
         toast({
           title: t('saveError'),
-          description: t('saveErrorDescription'),
+          description: result.error || t('saveErrorDescription'),
           variant: 'destructive',
         })
       }
-    })
+    } catch {
+      toast({
+        title: t('saveError'),
+        description: t('saveErrorDescription'),
+        variant: 'destructive',
+      })
+    }
   }
 
   const updateSetting = <K extends keyof UserSettings>(key: K, value: UserSettings[K]) => {
@@ -326,7 +342,9 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
               <Slider
                 id="rotationInterval"
                 value={[settings.rotationInterval]}
-                onValueChange={([value]) => updateSetting('rotationInterval', value)}
+                onValueChange={([value]) => {
+                  if (value !== undefined) updateSetting('rotationInterval', value)
+                }}
                 min={5}
                 max={60}
                 step={5}
@@ -597,7 +615,9 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
               <Slider
                 id="dailyGoal"
                 value={[settings.dailyGoal]}
-                onValueChange={([value]) => updateSetting('dailyGoal', value)}
+                onValueChange={([value]) => {
+                  if (value !== undefined) updateSetting('dailyGoal', value)
+                }}
                 min={10}
                 max={100}
                 step={5}
@@ -624,17 +644,10 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
 
       {/* 操作按钮 - 仅登录用户可保存 */}
       {!isGuest ? (
-        <div className="flex gap-4">
-          <Button onClick={handleSave} disabled={isPending || isResetting} className="flex-1">
-            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            保存
-          </Button>
-          <Button onClick={handleReset} disabled={isPending || isResetting} variant="outline">
-            {isResetting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {!isResetting && <RotateCcw className="mr-2 h-4 w-4" />}
-            重置
-          </Button>
-        </div>
+        <form action={handleSaveAction} className="flex gap-4">
+          <SaveButton label="保存" />
+          <ResetButton label="重置" action={handleResetAction} />
+        </form>
       ) : (
         <div className="border-muted-foreground/30 bg-muted/30 rounded-lg border border-dashed p-4 text-center">
           <p className="text-muted-foreground text-sm">{tTier('loginToUnlockDescription')}</p>

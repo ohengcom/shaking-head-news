@@ -79,7 +79,9 @@ export function RotationControls() {
             <Slider
               id="interval-slider"
               value={[interval]}
-              onValueChange={([value]) => setInterval(value)}
+              onValueChange={([value]) => {
+                if (value !== undefined) setInterval(value)
+              }}
               min={5}
               max={300}
               step={5}

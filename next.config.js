@@ -57,7 +57,7 @@ const nextConfig = {
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
   // Enable React Compiler (Stable in Next.js 16)
-  reactCompiler: true,
+  // reactCompiler: true,
   experimental: {
     // Enable Turbopack file system cache for faster dev builds
     turbopackFileSystemCacheForDev: true,

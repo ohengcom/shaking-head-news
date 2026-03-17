@@ -49,10 +49,14 @@ export function hslToRgb(h: number, s: number, l: number): [number, number, numb
  * @returns Relative luminance (0-1)
  */
 export function getRelativeLuminance(r: number, g: number, b: number): number {
-  const [rs, gs, bs] = [r, g, b].map((c) => {
+  const mapped = [r, g, b].map((c) => {
     const sRGB = c / 255
     return sRGB <= 0.03928 ? sRGB / 12.92 : Math.pow((sRGB + 0.055) / 1.055, 2.4)
   })
+
+  const rs = mapped[0] ?? 0
+  const gs = mapped[1] ?? 0
+  const bs = mapped[2] ?? 0
 
   return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs
 }
@@ -83,9 +87,9 @@ export function getContrastRatio(
  */
 export function parseHslString(hslString: string): [number, number, number] {
   const parts = hslString.trim().split(/\s+/)
-  const h = parseFloat(parts[0])
-  const s = parseFloat(parts[1].replace('%', ''))
-  const l = parseFloat(parts[2].replace('%', ''))
+  const h = parseFloat(parts[0] || '0')
+  const s = parseFloat((parts[1] || '0%').replace('%', ''))
+  const l = parseFloat((parts[2] || '0%').replace('%', ''))
   return [h, s, l]
 }
 

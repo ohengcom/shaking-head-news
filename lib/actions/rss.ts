@@ -484,5 +484,5 @@ function parseOPML(content: string): Omit<RSSSource, 'id' | 'order' | 'failureCo
 function extractAttribute(element: string, attrName: string): string | null {
   const regex = new RegExp(`${attrName}\\s*=\\s*["']([^"']*)["']`, 'i')
   const match = element.match(regex)
-  return match ? match[1] : null
+  return match ? match[1] || null : null
 }

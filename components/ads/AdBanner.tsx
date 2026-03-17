@@ -201,7 +201,11 @@ function getAdDimensions(
     },
   }
 
-  return configs[position || 'sidebar'][size || 'medium']
+  const positionConfig = configs[position || 'sidebar']
+  if (!positionConfig) return configs.sidebar.medium
+
+  const sizeConfig = positionConfig[size || 'medium']
+  return sizeConfig || configs.sidebar.medium
 }
 
 /**
@@ -215,7 +219,7 @@ function getDefaultAdSlot(position: AdBannerProps['position']): string {
     inline: process.env.NEXT_PUBLIC_ADSENSE_SLOT_INLINE || '',
   }
 
-  return slots[position || 'sidebar']
+  return slots[position || 'sidebar'] || ''
 }
 
 export default AdBanner

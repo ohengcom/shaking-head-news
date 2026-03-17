@@ -227,7 +227,7 @@ export function escapeHtml(text: string): string {
     '/': '&#x2F;',
   }
 
-  return text.replace(/[&<>"'/]/g, (char) => htmlEscapes[char])
+  return text.replace(/[&<>"'/]/g, (char) => htmlEscapes[char] || char)
 }
 
 /**
@@ -268,7 +268,8 @@ export function validateFile(
   }
 
   // Check file extension
-  const extension = file.name.toLowerCase().match(/\.[^.]+$/)?.[0]
+  const match = file.name.toLowerCase().match(/\.[^.]+$/)
+  const extension = match ? match[0] : undefined
   if (!extension || !allowedExtensions.includes(extension)) {
     return {
       valid: false,

@@ -48,6 +48,7 @@ export function TiltWrapper({
 
     // Send the latest rotation as a summary (total count preserved in duration sum)
     const lastEntry = batch[batch.length - 1]
+    if (!lastEntry) return
     const totalDuration = batch.reduce((sum, r) => sum + r.duration, 0)
     recordRotation(lastEntry.angle, totalDuration).catch(() => {
       // Silent failure — stats are non-critical
@@ -60,6 +61,7 @@ export function TiltWrapper({
       if (pendingRotations.current.length > 0) {
         const batch = pendingRotations.current
         const lastEntry = batch[batch.length - 1]
+        if (!lastEntry) return
         const totalDuration = batch.reduce((sum, r) => sum + r.duration, 0)
         // Use sendBeacon for reliable page-unload reporting
         const data = JSON.stringify({ angle: lastEntry.angle, duration: totalDuration })
