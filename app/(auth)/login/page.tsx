@@ -1,13 +1,30 @@
 import { signIn } from '@/lib/auth'
 import Link from 'next/link'
 
+function getLoginErrorMessage(error?: string) {
+  switch (error) {
+    case 'CallbackRouteError':
+      return '登录回调失败，请稍后重试。若持续失败，通常是服务端存储或第三方登录配置异常。'
+    case 'OAuthCallbackError':
+    case 'OAuthSignin':
+      return '第三方登录握手失败，请重试一次。若持续失败，请检查 OAuth 回调域名配置。'
+    case 'AccessDenied':
+      return '登录请求被拒绝，请确认您已完成第三方授权。'
+    case 'Configuration':
+      return '认证服务配置异常，请稍后再试。'
+    default:
+      return error ? '登录失败，请稍后重试。' : null
+  }
+}
+
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ callbackUrl?: string }>
+  searchParams: Promise<{ callbackUrl?: string; error?: string }>
 }) {
   const params = await searchParams
   const callbackUrl = params.callbackUrl || '/'
+  const errorMessage = getLoginErrorMessage(params.error)
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
@@ -16,6 +33,13 @@ export default async function LoginPage({
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">摇头看新闻</h1>
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">登录以同步您的设置和偏好</p>
         </div>
+
+        {errorMessage && (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200">
+            <p>{errorMessage}</p>
+            <p className="mt-1 text-xs opacity-80">错误代码: {params.error}</p>
+          </div>
+        )}
 
         <div className="mt-8 space-y-4">
           <form

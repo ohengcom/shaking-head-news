@@ -53,6 +53,23 @@ function normalizeEmail(email?: string | null): string | undefined {
   return sanitized || undefined
 }
 
+function encodeFallbackSegment(value: string): string {
+  return encodeURIComponent(value).replace(/%/g, '_')
+}
+
+export function buildFallbackUserId({
+  provider,
+  providerAccountId,
+  email,
+}: Pick<EnsureUserProfileInput, 'provider' | 'providerAccountId' | 'email'>): string {
+  const normalizedEmail = normalizeEmail(email)
+  const rawId = normalizedEmail
+    ? `email:${normalizedEmail}`
+    : `provider:${provider}:${providerAccountId}`
+
+  return `fallback:${encodeFallbackSegment(rawId)}`
+}
+
 function getEnvSubscriptionTier(userId: string, email?: string | null): SubscriptionTier | null {
   const normalizedEmail = email ? email.toLowerCase() : undefined
 

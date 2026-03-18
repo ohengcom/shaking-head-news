@@ -2,7 +2,11 @@ import { Buffer } from 'buffer'
 import NextAuth from 'next-auth'
 import Google from 'next-auth/providers/google'
 import MicrosoftEntraID from 'next-auth/providers/microsoft-entra-id'
-import { ensureInternalUserProfile, getSubscriptionTierForUser } from '@/lib/user-profile'
+import {
+  buildFallbackUserId,
+  ensureInternalUserProfile,
+  getSubscriptionTierForUser,
+} from '@/lib/user-profile'
 
 const googleClientId = process.env.AUTH_GOOGLE_ID ?? process.env.GOOGLE_CLIENT_ID
 const googleClientSecret = process.env.AUTH_GOOGLE_SECRET ?? process.env.GOOGLE_CLIENT_SECRET
@@ -66,26 +70,91 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
 
       if (account?.provider && account.providerAccountId) {
-        const profile = await ensureInternalUserProfile({
+        token.authProvider = account.provider
+        token.providerAccountId = account.providerAccountId
+
+        const email = user?.email ?? token.email
+        const name = user?.name ?? token.name
+        const image = typeof token.picture === 'string' ? token.picture : user?.image
+        const fallbackUserId = buildFallbackUserId({
           provider: account.provider,
           providerAccountId: account.providerAccountId,
-          email: user?.email ?? token.email,
-          name: user?.name ?? token.name,
-          image: typeof token.picture === 'string' ? token.picture : user?.image,
+          email,
         })
 
-        token.id = profile.id
-        token.tier = profile.subscriptionTier
-        token.email = profile.email ?? token.email
-        token.name = profile.name ?? token.name
+        try {
+          const profile = await ensureInternalUserProfile({
+            provider: account.provider,
+            providerAccountId: account.providerAccountId,
+            email,
+            name,
+            image,
+          })
 
-        if (profile.image && typeof token.picture !== 'string') {
-          token.picture = profile.image
+          token.id = profile.id
+          token.tier = profile.subscriptionTier
+          token.email = profile.email ?? token.email
+          token.name = profile.name ?? token.name
+
+          if (profile.image && typeof token.picture !== 'string') {
+            token.picture = profile.image
+          }
+        } catch (error) {
+          console.error(
+            'Failed to persist user profile during sign-in. Continuing with a stateless session.',
+            error
+          )
+
+          token.id = fallbackUserId
+          token.tier = await getSubscriptionTierForUser({
+            userId: fallbackUserId,
+            email,
+          })
+          token.email = email ?? token.email
+          token.name = name ?? token.name
+
+          if (image && typeof token.picture !== 'string') {
+            token.picture = image
+          }
         }
       } else if (typeof token.id === 'string') {
+        let currentUserId = token.id
+        const authProvider = typeof token.authProvider === 'string' ? token.authProvider : undefined
+        const providerAccountId =
+          typeof token.providerAccountId === 'string' ? token.providerAccountId : undefined
+        const tokenEmail = typeof token.email === 'string' ? token.email : undefined
+        const tokenName = typeof token.name === 'string' ? token.name : undefined
+
+        if (authProvider && providerAccountId && currentUserId.startsWith('fallback:')) {
+          try {
+            const profile = await ensureInternalUserProfile({
+              provider: authProvider,
+              providerAccountId,
+              email: tokenEmail,
+              name: tokenName,
+              image: typeof token.picture === 'string' ? token.picture : undefined,
+            })
+
+            token.id = profile.id
+            currentUserId = profile.id
+            token.tier = profile.subscriptionTier
+            token.email = profile.email ?? token.email
+            token.name = profile.name ?? token.name
+
+            if (profile.image && typeof token.picture !== 'string') {
+              token.picture = profile.image
+            }
+          } catch (error) {
+            console.error(
+              'Failed to reconcile a fallback user profile. Keeping the stateless session.',
+              error
+            )
+          }
+        }
+
         token.tier = await getSubscriptionTierForUser({
-          userId: token.id,
-          email: token.email,
+          userId: currentUserId,
+          email: tokenEmail,
         })
       }
 

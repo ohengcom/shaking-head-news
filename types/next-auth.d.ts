@@ -13,5 +13,7 @@ declare module 'next-auth/jwt' {
   interface JWT {
     id?: string
     tier?: 'member' | 'pro'
+    authProvider?: string
+    providerAccountId?: string
   }
 }
