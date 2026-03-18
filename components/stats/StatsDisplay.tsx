@@ -35,6 +35,7 @@ interface SummaryStats {
 interface StatsDisplayProps {
   initialStats: SummaryStats
   dailyGoal: number
+  notificationsEnabled: boolean
 }
 
 /**
@@ -42,7 +43,7 @@ interface StatsDisplayProps {
  * 需求: 8.2 - 展示每日、每周和每月的运动次数
  * 需求: 8.5 - 使用可视化图表展示运动趋势
  */
-export function StatsDisplay({ initialStats, dailyGoal }: StatsDisplayProps) {
+export function StatsDisplay({ initialStats, dailyGoal, notificationsEnabled }: StatsDisplayProps) {
   const t = useTranslations('stats')
   const [stats] = useState<SummaryStats>(initialStats)
 
@@ -59,7 +60,11 @@ export function StatsDisplay({ initialStats, dailyGoal }: StatsDisplayProps) {
   return (
     <div className="space-y-6">
       {/* 健康提醒组件 */}
-      <HealthReminder dailyGoal={dailyGoal} currentCount={stats.today.count} />
+      <HealthReminder
+        dailyGoal={dailyGoal}
+        currentCount={stats.today.count}
+        notificationsEnabled={notificationsEnabled}
+      />
 
       {/* 统计卡片 */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

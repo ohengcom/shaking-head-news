@@ -1,10 +1,10 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { useRotationStore } from '@/lib/stores/rotation-store'
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { usePathname } from 'next/navigation'
 import { recordRotation } from '@/lib/actions/stats'
+import { useRotationStore } from '@/lib/stores/rotation-store'
 import { cn } from '@/lib/utils'
 
 interface TiltWrapperProps {
@@ -18,7 +18,7 @@ interface PendingRotation {
   duration: number
 }
 
-const BATCH_INTERVAL_MS = 5 * 60 * 1000 // Flush every 5 minutes
+const BATCH_INTERVAL_MS = 5 * 60 * 1000
 
 export function TiltWrapper({
   children,
@@ -33,102 +33,110 @@ export function TiltWrapper({
   const pendingRotations = useRef<PendingRotation[]>([])
   const pathname = usePathname()
 
-  // Use props if provided, otherwise use store values
   const effectiveMode = propMode ?? mode
   const effectiveInterval = propInterval ?? interval
-
-  // Disable rotation on settings and RSS pages
   const isSettingsPage = pathname === '/settings' || pathname === '/rss'
 
-  // Flush pending rotations to server (batch upload)
   const flushRotations = useCallback(() => {
     const batch = pendingRotations.current
-    if (batch.length === 0) return
+    if (batch.length === 0) {
+      return
+    }
+
     pendingRotations.current = []
 
-    // Send the latest rotation as a summary (total count preserved in duration sum)
     const lastEntry = batch[batch.length - 1]
-    if (!lastEntry) return
-    const totalDuration = batch.reduce((sum, r) => sum + r.duration, 0)
+    if (!lastEntry) {
+      return
+    }
+
+    const totalDuration = batch.reduce((sum, rotation) => sum + rotation.duration, 0)
     recordRotation(lastEntry.angle, totalDuration).catch(() => {
-      // Silent failure — stats are non-critical
+      // Stats are non-critical and should not block rendering.
     })
   }, [])
 
-  // Flush rotations on page unload
   useEffect(() => {
     const handleUnload = () => {
-      if (pendingRotations.current.length > 0) {
-        const batch = pendingRotations.current
-        const lastEntry = batch[batch.length - 1]
-        if (!lastEntry) return
-        const totalDuration = batch.reduce((sum, r) => sum + r.duration, 0)
-        // Use sendBeacon for reliable page-unload reporting
-        const data = JSON.stringify({ angle: lastEntry.angle, duration: totalDuration })
-        navigator.sendBeacon?.('/api/stats/rotation', data)
+      if (pendingRotations.current.length === 0) {
+        return
       }
+
+      const batch = pendingRotations.current
+      const lastEntry = batch[batch.length - 1]
+      if (!lastEntry) {
+        return
+      }
+
+      const totalDuration = batch.reduce((sum, rotation) => sum + rotation.duration, 0)
+      const data = JSON.stringify({ angle: lastEntry.angle, duration: totalDuration })
+      navigator.sendBeacon?.('/api/stats/rotation', data)
     }
+
     window.addEventListener('beforeunload', handleUnload)
     return () => window.removeEventListener('beforeunload', handleUnload)
   }, [])
 
-  // Periodically flush rotation batch
   useEffect(() => {
     const timer = setInterval(flushRotations, BATCH_INTERVAL_MS)
+
     return () => {
       clearInterval(timer)
-      flushRotations() // Flush on cleanup
+      flushRotations()
     }
   }, [flushRotations])
 
-  // Manually rehydrate zustand store after mount
   useEffect(() => {
     try {
       useRotationStore.persist.rehydrate()
-    } catch (e) {
-      console.error('Rehydration failed:', e)
+    } catch (error) {
+      console.error('Rehydration failed:', error)
     }
+
     setIsHydrated(true)
   }, [])
 
-  // Check for prefers-reduced-motion
   useEffect(() => {
-    // We intentionally ignore prefers-reduced-motion to ensure the "shaking" feature
-    // works on all systems (including Cloud PCs/VMs that might default to reduced motion).
-    // The feature is core to the application's purpose.
-    if (typeof window === 'undefined') return
-    setPrefersReducedMotion(false)
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const updatePreference = () => {
+      setPrefersReducedMotion(mediaQuery.matches)
+    }
+
+    updatePreference()
+    mediaQuery.addEventListener('change', updatePreference)
+
+    return () => mediaQuery.removeEventListener('change', updatePreference)
   }, [])
 
-  // Reset angle to 0 on settings page
   useEffect(() => {
-    if (isSettingsPage) {
+    if (isSettingsPage || prefersReducedMotion) {
       setAngle(0)
     }
-  }, [isSettingsPage, setAngle])
+  }, [isSettingsPage, prefersReducedMotion, setAngle])
 
-  // Handle rotation logic
   useEffect(() => {
-    if (!isHydrated) return
+    if (!isHydrated) {
+      return
+    }
 
     if (isPaused || effectiveMode === 'fixed' || prefersReducedMotion || isSettingsPage) {
       return
     }
 
-    // Continuous mode: change angle at intervals
     const timer = setInterval(() => {
-      // Generate random angle with absolute value between 5 and 20 degrees
-      const angleMagnitude = Math.random() * 15 + 5 // 5 to 20
+      const angleMagnitude = Math.random() * 15 + 5
       const sign = Math.random() < 0.5 ? 1 : -1
       const newAngle = angleMagnitude * sign
       setAngle(newAngle)
 
-      // Buffer rotation for batch reporting
       const now = Date.now()
       const duration = Math.round((now - lastRotationTime.current) / 1000)
       lastRotationTime.current = now
 
-      // Only buffer if there's a significant angle change
       if (Math.abs(newAngle - previousAngle.current) > 0.5) {
         pendingRotations.current.push({ angle: newAngle, duration })
         previousAngle.current = newAngle
@@ -137,33 +145,34 @@ export function TiltWrapper({
 
     return () => clearInterval(timer)
   }, [
-    effectiveMode,
     effectiveInterval,
-    isPaused,
-    prefersReducedMotion,
-    isSettingsPage,
-    setAngle,
+    effectiveMode,
     isHydrated,
+    isPaused,
+    isSettingsPage,
+    prefersReducedMotion,
+    setAngle,
   ])
 
-  // Handle manual mode (mouse follow)
   useEffect(() => {
-    if (!isHydrated) return
-
-    if (effectiveMode === 'fixed' && !prefersReducedMotion && !isSettingsPage) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const handleMouseMove = (e: any) => {
-        const xFactor = (e.clientX / window.innerWidth) * 2 - 1
-        const targetAngle = xFactor * 15
-        setAngle(targetAngle)
-      }
-
-      window.addEventListener('mousemove', handleMouseMove)
-      return () => window.removeEventListener('mousemove', handleMouseMove)
+    if (!isHydrated) {
+      return
     }
-  }, [effectiveMode, prefersReducedMotion, isSettingsPage, setAngle, isHydrated])
 
-  // If user prefers reduced motion, render without animation
+    if (effectiveMode !== 'fixed' || prefersReducedMotion || isSettingsPage) {
+      return
+    }
+
+    const handleMouseMove = (event: MouseEvent) => {
+      const xFactor = (event.clientX / window.innerWidth) * 2 - 1
+      const targetAngle = xFactor * 15
+      setAngle(targetAngle)
+    }
+
+    window.addEventListener('mousemove', handleMouseMove)
+    return () => window.removeEventListener('mousemove', handleMouseMove)
+  }, [effectiveMode, isHydrated, isSettingsPage, prefersReducedMotion, setAngle])
+
   if (prefersReducedMotion) {
     return (
       <div
@@ -171,6 +180,7 @@ export function TiltWrapper({
           'h-screen overflow-x-hidden overflow-y-auto',
           !isSettingsPage && 'scrollbar-hide'
         )}
+        data-testid="tilt-wrapper"
       >
         {children}
       </div>

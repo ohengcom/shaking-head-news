@@ -11,6 +11,7 @@ import { checkHealthReminder } from '@/lib/actions/stats'
 interface HealthReminderProps {
   dailyGoal: number
   currentCount: number
+  notificationsEnabled: boolean
 }
 
 /**
@@ -18,7 +19,11 @@ interface HealthReminderProps {
  * 需求: 8.3 - 连续2小时未运动时使用浏览器 Notification API 发送提醒
  * 需求: 8.4 - 达到每日目标时使用 Toast 显示鼓励消息
  */
-export function HealthReminder({ dailyGoal, currentCount }: HealthReminderProps) {
+export function HealthReminder({
+  dailyGoal,
+  currentCount,
+  notificationsEnabled: settingsEnabled,
+}: HealthReminderProps) {
   const t = useTranslations('stats')
   const { toast } = useToast()
   const [notificationsEnabled, setNotificationsEnabled] = useState(false)
@@ -27,12 +32,16 @@ export function HealthReminder({ dailyGoal, currentCount }: HealthReminderProps)
 
   // 检查通知权限
   useEffect(() => {
+    if (!settingsEnabled) {
+      setNotificationsEnabled(false)
+      return
+    }
+
     if (typeof window !== 'undefined' && 'Notification' in window) {
       setPermission(Notification.permission)
-
       setNotificationsEnabled(Notification.permission === 'granted')
     }
-  }, [])
+  }, [settingsEnabled])
 
   // 检查是否达到目标
   useEffect(() => {
@@ -51,7 +60,7 @@ export function HealthReminder({ dailyGoal, currentCount }: HealthReminderProps)
 
   // 定期检查是否需要发送健康提醒
   useEffect(() => {
-    if (!notificationsEnabled) return
+    if (!settingsEnabled || !notificationsEnabled) return
 
     const checkReminder = async () => {
       try {
@@ -72,10 +81,19 @@ export function HealthReminder({ dailyGoal, currentCount }: HealthReminderProps)
     // 不立即检查，等待第一个间隔
 
     return () => clearInterval(interval)
-  }, [notificationsEnabled])
+  }, [notificationsEnabled, settingsEnabled])
 
   // 请求通知权限
   const requestNotificationPermission = async () => {
+    if (!settingsEnabled) {
+      toast({
+        title: t('notificationDisabled'),
+        description: t('notificationDisabledMessage'),
+        variant: 'destructive',
+      })
+      return
+    }
+
     if (typeof window === 'undefined' || !('Notification' in window)) {
       toast({
         title: t('notificationNotSupported'),
@@ -166,7 +184,12 @@ export function HealthReminder({ dailyGoal, currentCount }: HealthReminderProps)
           </div>
           <div>
             {!notificationsEnabled ? (
-              <Button onClick={requestNotificationPermission} variant="outline" size="sm">
+              <Button
+                onClick={requestNotificationPermission}
+                variant="outline"
+                size="sm"
+                disabled={!settingsEnabled}
+              >
                 <Bell className="mr-2 h-4 w-4" />
                 {t('enableNotifications')}
               </Button>

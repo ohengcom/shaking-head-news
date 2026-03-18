@@ -7,6 +7,12 @@ const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN
 const isRedisConfigured = !!(redisUrl && redisToken)
 
 if (!isRedisConfigured) {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(
+      'Upstash Redis is required in production. Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN.'
+    )
+  }
+
   console.warn('[Storage] Redis not configured, using in-memory storage (data will not persist)')
 }
 
@@ -173,7 +179,11 @@ export async function setStorageItemWithOptions<T>(
 // 存储键格式化函数
 export const StorageKeys = {
   userSettings: (userId: string) => `user:${userId}:settings`,
+  userProfile: (userId: string) => `user:${userId}:profile`,
   userStats: (userId: string, date: string) => `user:${userId}:stats:${date}`,
   userRSSSources: (userId: string) => `user:${userId}:rss-sources`,
+  authAccount: (provider: string, providerAccountId: string) =>
+    `auth:account:${provider}:${providerAccountId}`,
+  authEmail: (email: string) => `auth:email:${email.toLowerCase()}`,
   rateLimit: (identifier: string) => `rate-limit:${identifier}`,
 }

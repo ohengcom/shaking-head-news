@@ -27,27 +27,27 @@
     "subtitle": "Improve your neck health through page rotation while browsing news",
     "features": {
       "news": {
-        "title": "📰 Real-time News",
+        "title": "ðŸ“° Real-time News",
         "description": "Get the latest news from multiple sources"
       },
       "rotation": {
-        "title": "🔄 Page Rotation",
+        "title": "ðŸ”„ Page Rotation",
         "description": "Automatic page rotation to help exercise your neck"
       },
       "stats": {
-        "title": "📊 Health Statistics",
+        "title": "ðŸ“Š Health Statistics",
         "description": "Track your neck exercise data and build healthy habits"
       },
       "i18n": {
-        "title": "🌍 Multi-language Support",
+        "title": "ðŸŒ Multi-language Support",
         "description": "Support for Chinese and English with automatic news source switching"
       },
       "sync": {
-        "title": "☁️ Cloud Sync",
+        "title": "â˜ï¸ Cloud Sync",
         "description": "Sync your settings and preferences across devices after login"
       },
       "theme": {
-        "title": "🎨 Custom Themes",
+        "title": "ðŸŽ¨ Custom Themes",
         "description": "Support for light and dark themes with customizable font sizes"
       }
     }
@@ -72,7 +72,7 @@
     "languageDescription": "Select interface language",
     "newsSource": "News Sources",
     "newsSourceDescription": "Manage your news sources and RSS subscriptions",
-    "chinese": "中文",
+    "chinese": "ä¸­æ–‡",
     "english": "English",
     "theme": "Theme",
     "themeDescription": "Select interface theme",
@@ -124,7 +124,7 @@
     "averageDuration": "Average Duration",
     "goal": "Goal",
     "goalProgress": "Goal Progress",
-    "goalAchieved": "🎉 Congratulations! Goal Achieved!",
+    "goalAchieved": "ðŸŽ‰ Congratulations! Goal Achieved!",
     "goalAchievedMessage": "You've completed {count} neck exercises today. Keep it up!",
     "keepGoing": "Keep Going!",
     "noData": "No data available",
@@ -216,8 +216,8 @@
     "signOutError": "Sign out failed"
   },
   "footer": {
-    "copyright": "© 2026 Shaking Head News. All rights reserved.",
-    "madeWith": "Made with ❤️",
+    "copyright": "Â© 2026 Shaking Head News. All rights reserved.",
+    "madeWith": "Made with â¤ï¸",
     "version": "Version"
   },
   "about": {
@@ -281,11 +281,11 @@
     "memberPrice": "Free",
     "memberDescription": "Login to unlock more features",
     "proTitle": "Pro",
-    "proPrice": "Limited Time Free",
+    "proPrice": "Managed Access",
     "proDescription": "All premium features",
     "currentPlan": "Current Plan",
     "loginFree": "Login Free",
-    "oneClickActivate": "One-click Activate",
+    "oneClickActivate": "Managed Access",
     "loginToActivate": "Login to Activate",
     "comingSoon": "Coming Soon",
     "included": "Included",
@@ -337,7 +337,30 @@
       "none": "-",
       "memberBadge": "Member badge",
       "proBadge": "Pro badge"
-    }
+    },
+    "cardBenefits": {
+      "guest": {
+        "01": "Instant access",
+        "02": "Curated news sources",
+        "03": "Comfortable default rotation"
+      },
+      "member": {
+        "01": "More selectable news sources",
+        "02": "Custom rotation angle and interval",
+        "03": "Cloud-synced preferences"
+      },
+      "pro": {
+        "01": "Custom RSS feeds",
+        "02": "Health reminders and full charts",
+        "03": "Ad-free reading"
+      }
+    },
+    "oneClickActivateButton": "Managed by Server",
+    "loginToActivateLink": "Sign in to see whether Pro access is available",
+    "proAccessManaged": "Server Managed",
+    "serverManaged": "Server-managed access",
+    "memberCurrentMessage": "You are on Member with cloud sync and advanced controls enabled.",
+    "proCurrentMessage": "You are on Pro with the full premium feature set unlocked."
   },
   "page": {
     "myFeed": "My Feed",

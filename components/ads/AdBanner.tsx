@@ -1,85 +1,27 @@
-/**
- * AdBanner Component
- * 广告横幅组件
- *
- * 根据用户层级显示/隐藏广告：
- * - Guest: 强制显示广告
- * - Member: 强制显示广告
- * - Pro: 可根据设置显示/隐藏
- */
-
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useUserTier } from '@/hooks/use-user-tier'
+import { useEffect } from 'react'
 import { cn } from '@/lib/utils'
 
 interface AdBannerProps {
-  /** 广告位置 */
   position?: 'sidebar' | 'header' | 'footer' | 'inline'
-  /** 广告尺寸 */
   size?: 'small' | 'medium' | 'large'
-  /** 自定义类名 */
   className?: string
-  /** 广告单元 ID (Google AdSense) */
   adSlot?: string
-  /** 初始 Pro 状态 (用于服务端渲染) */
-  initialIsPro?: boolean
+  enabled?: boolean
 }
 
-/**
- * 广告横幅组件
- * 使用 Google AdSense 显示广告
- */
 export function AdBanner({
   position = 'sidebar',
   size = 'medium',
   className,
   adSlot,
-  initialIsPro,
+  enabled = true,
 }: AdBannerProps) {
-  const { isPro, features } = useUserTier({ initialIsPro })
-  const [adsEnabled, setAdsEnabled] = useState(true)
-  const [isClient, setIsClient] = useState(false)
-
-  // 确保在客户端渲染
-  useEffect(() => {
-    setIsClient(true)
-  }, [])
-
-  // Pro 用户可以关闭广告
-  useEffect(() => {
-    const checkAdsPreference = () => {
-      if (isPro && features.adsDisableable) {
-        // 从用户设置中获取广告偏好
-        const savedPreference = localStorage.getItem('adsEnabled')
-        if (savedPreference !== null) {
-          setAdsEnabled(savedPreference === 'true')
-        }
-      } else {
-        // Guest 和 Member 强制显示广告
-        setAdsEnabled(true)
-      }
-    }
-
-    checkAdsPreference()
-
-    // Listen for setting changes
-    window.addEventListener('ads-preference-changed', checkAdsPreference)
-    return () => window.removeEventListener('ads-preference-changed', checkAdsPreference)
-  }, [isPro, features.adsDisableable])
-
-  // 如果 Pro 用户关闭了广告，不渲染
-  if (isPro && features.adsDisableable && !adsEnabled) {
+  if (!enabled) {
     return null
   }
 
-  // 服务端渲染时返回占位符
-  if (!isClient) {
-    return <AdPlaceholder position={position} size={size} className={className} />
-  }
-
-  // 根据位置和尺寸确定广告尺寸
   const adDimensions = getAdDimensions(position, size)
 
   return (
@@ -92,8 +34,7 @@ export function AdBanner({
       data-ad-position={position}
       data-ad-size={size}
     >
-      {/* 开发环境显示占位符 */}
-      {process.env.NODE_ENV === 'development' ? (
+      {process.env.NODE_ENV === 'development' || !process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID ? (
         <AdPlaceholder position={position} size={size} />
       ) : (
         <GoogleAdSense adSlot={adSlot || getDefaultAdSlot(position)} style={adDimensions.style} />
@@ -102,9 +43,6 @@ export function AdBanner({
   )
 }
 
-/**
- * 广告占位符（开发环境使用）
- */
 function AdPlaceholder({
   position,
   size,
@@ -129,7 +67,7 @@ function AdPlaceholder({
       style={dimensions.style}
     >
       <div className="text-center">
-        <p className="text-xs font-medium">广告位</p>
+        <p className="text-xs font-medium">Ad Slot</p>
         <p className="text-[10px] opacity-70">
           {position} - {size}
         </p>
@@ -138,13 +76,9 @@ function AdPlaceholder({
   )
 }
 
-/**
- * Google AdSense 组件
- */
 function GoogleAdSense({ adSlot, style }: { adSlot: string; style: React.CSSProperties }) {
   useEffect(() => {
     try {
-      // 加载 AdSense 脚本
       if (
         typeof window !== 'undefined' &&
         (window as unknown as { adsbygoogle?: unknown[] }).adsbygoogle
@@ -168,9 +102,6 @@ function GoogleAdSense({ adSlot, style }: { adSlot: string; style: React.CSSProp
   )
 }
 
-/**
- * 获取广告尺寸配置
- */
 function getAdDimensions(
   position: AdBannerProps['position'],
   size: AdBannerProps['size']
@@ -208,9 +139,6 @@ function getAdDimensions(
   return sizeConfig || configs.sidebar.medium
 }
 
-/**
- * 获取默认广告位 ID
- */
 function getDefaultAdSlot(position: AdBannerProps['position']): string {
   const slots: Record<string, string> = {
     sidebar: process.env.NEXT_PUBLIC_ADSENSE_SLOT_SIDEBAR || '',

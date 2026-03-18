@@ -36,7 +36,9 @@
     "lib/**/*.ts",
     "lib/**/*.tsx",
     "types/**/*.ts",
+    "types/**/*.d.ts",
     "config/**/*.ts",
+    "auth.ts",
     "proxy.ts",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"

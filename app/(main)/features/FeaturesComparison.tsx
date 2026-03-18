@@ -1,17 +1,11 @@
-/**
- * FeaturesComparison Component
- * 功能对比客户端组件 - 现代化设计
- */
-
 'use client'
 
 import { useTranslations } from 'next-intl'
 import { signIn, useSession } from 'next-auth/react'
-import { Check, X, Eye, Sparkles, Crown, User, Zap, Loader2 } from 'lucide-react'
+import { Check, X, Eye, Sparkles, Crown, User, Zap } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { UserTier } from '@/lib/config/features'
 import { cn } from '@/lib/utils'
-import { useUserTier } from '@/hooks/use-user-tier'
 
 interface FeaturesComparisonProps {
   currentTier: UserTier
@@ -26,15 +20,10 @@ interface Feature {
   pro: FeatureValue
 }
 
-/**
- * 功能对比组件
- */
 export function FeaturesComparison({ currentTier }: FeaturesComparisonProps) {
   const t = useTranslations('features')
   const { data: session } = useSession()
-  const { togglePro, isTogglingPro } = useUserTier({ initialIsPro: currentTier === 'pro' })
 
-  // 功能列表
   const features: Feature[] = [
     { key: 'instantUse', guest: 'included', member: 'not-included', pro: 'not-included' },
     {
@@ -106,7 +95,6 @@ export function FeaturesComparison({ currentTier }: FeaturesComparisonProps) {
     },
   ]
 
-  // 权益列表
   const guestBenefits = [
     t('cardBenefits.guest.01'),
     t('cardBenefits.guest.02'),
@@ -123,9 +111,7 @@ export function FeaturesComparison({ currentTier }: FeaturesComparisonProps) {
 
   return (
     <div className="space-y-12">
-      {/* 定价卡片 */}
       <div className="grid gap-6 md:grid-cols-3">
-        {/* Guest 卡片 */}
         <PricingCard
           icon={<User className="h-6 w-6" />}
           title={t('guestTitle')}
@@ -136,7 +122,6 @@ export function FeaturesComparison({ currentTier }: FeaturesComparisonProps) {
           t={t}
         />
 
-        {/* Member 卡片 - 推荐 */}
         <PricingCard
           icon={<Crown className="h-6 w-6" />}
           title={t('memberTitle')}
@@ -149,7 +134,6 @@ export function FeaturesComparison({ currentTier }: FeaturesComparisonProps) {
           onAction={() => signIn()}
         />
 
-        {/* Pro 卡片 */}
         <PricingCard
           icon={<Sparkles className="h-6 w-6" />}
           title={t('proTitle')}
@@ -160,26 +144,25 @@ export function FeaturesComparison({ currentTier }: FeaturesComparisonProps) {
           benefits={proBenefits}
           t={t}
           isAuthenticated={!!session}
-          onAction={session ? togglePro : undefined}
-          isLoading={isTogglingPro}
         />
       </div>
 
-      {/* 完整功能对比表格 */}
       <div className="bg-card/50 overflow-hidden rounded-2xl border backdrop-blur-sm">
         <div className="bg-muted/30 border-b p-6">
           <h2 className="flex items-center gap-2 text-xl font-semibold">
             <Zap className="text-primary h-5 w-5" />
-            完整功能对比
+            å®Œæ•´åŠŸèƒ½å¯¹æ¯”
           </h2>
-          <p className="text-muted-foreground mt-1 text-sm">详细了解每个层级的功能差异</p>
+          <p className="text-muted-foreground mt-1 text-sm">
+            è¯¦ç»†äº†è§£æ¯ä¸ªå±‚çº§çš„åŠŸèƒ½å·®å¼‚
+          </p>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="bg-muted/20 border-b">
-                <th className="min-w-[200px] p-4 text-left font-semibold">功能</th>
+                <th className="min-w-[200px] p-4 text-left font-semibold">åŠŸèƒ½</th>
                 <th className="min-w-[120px] p-4 text-center">
                   <div className="flex flex-col items-center gap-1">
                     <User className="text-muted-foreground h-5 w-5" />
@@ -235,12 +218,13 @@ export function FeaturesComparison({ currentTier }: FeaturesComparisonProps) {
           </table>
         </div>
 
-        {/* 底部 CTA */}
         <div className="from-primary/5 border-t bg-gradient-to-r via-transparent to-amber-500/5 p-6">
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
             {currentTier === 'guest' && (
               <>
-                <p className="text-muted-foreground text-sm">立即登录，免费解锁会员功能</p>
+                <p className="text-muted-foreground text-sm">
+                  ç«‹å³ç™»å½•ï¼Œå…è´¹è§£é”ä¼šå‘˜åŠŸèƒ½
+                </p>
                 <Button onClick={() => signIn()} className="gap-2">
                   <Crown className="h-4 w-4" />
                   {t('loginFree')}
@@ -250,13 +234,13 @@ export function FeaturesComparison({ currentTier }: FeaturesComparisonProps) {
             {currentTier === 'member' && (
               <p className="text-muted-foreground flex items-center gap-2 text-sm">
                 <Check className="h-4 w-4 text-green-500" />
-                您已是会员，享受完整功能
+                {t('memberCurrentMessage')}
               </p>
             )}
             {currentTier === 'pro' && (
               <p className="text-muted-foreground flex items-center gap-2 text-sm">
                 <Sparkles className="h-4 w-4 text-amber-500" />
-                您已是 Pro 用户，享受所有高级功能
+                {t('proCurrentMessage')}
               </p>
             )}
           </div>
@@ -266,9 +250,6 @@ export function FeaturesComparison({ currentTier }: FeaturesComparisonProps) {
   )
 }
 
-/**
- * 功能值显示组件
- */
 function FeatureValueDisplay({
   value,
   featureKey,
@@ -285,6 +266,7 @@ function FeatureValueDisplay({
       </span>
     )
   }
+
   if (value === 'not-included') {
     return (
       <span className="bg-muted inline-flex h-8 w-8 items-center justify-center rounded-full">
@@ -292,16 +274,16 @@ function FeatureValueDisplay({
       </span>
     )
   }
+
   if (value === 'preview') {
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full bg-yellow-500/10 px-2.5 py-1 text-yellow-600 dark:text-yellow-500">
         <Eye className="h-3.5 w-3.5" />
-        <span className="text-xs font-medium">预览</span>
+        <span className="text-xs font-medium">é¢„è§ˆ</span>
       </span>
     )
   }
 
-  // Highlight News Sources differences
   if (featureKey === 'newsSources') {
     if (tier === 'guest') {
       return (
@@ -310,6 +292,7 @@ function FeatureValueDisplay({
         </span>
       )
     }
+
     if (tier === 'member') {
       return (
         <span className="bg-primary/10 text-primary rounded-md px-3 py-1 text-sm font-medium">
@@ -317,6 +300,7 @@ function FeatureValueDisplay({
         </span>
       )
     }
+
     if (tier === 'pro') {
       return (
         <span className="rounded-md bg-gradient-to-r from-amber-500/20 to-orange-500/20 px-3 py-1 text-sm font-bold text-amber-600 dark:text-amber-400">
@@ -331,9 +315,6 @@ function FeatureValueDisplay({
   )
 }
 
-/**
- * 定价卡片组件
- */
 function PricingCard({
   icon,
   title,
@@ -346,7 +327,6 @@ function PricingCard({
   t,
   onAction,
   isAuthenticated,
-  isLoading,
 }: {
   icon: React.ReactNode
   title: string
@@ -359,7 +339,6 @@ function PricingCard({
   t: ReturnType<typeof useTranslations<'features'>>
   onAction?: () => void
   isAuthenticated?: boolean
-  isLoading?: boolean
 }) {
   return (
     <div
@@ -371,25 +350,22 @@ function PricingCard({
         !isHighlighted && !isPro && 'bg-card hover:border-primary/50'
       )}
     >
-      {/* 推荐标签 */}
       {isHighlighted && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
           <span className="bg-primary text-primary-foreground rounded-full px-4 py-1 text-xs font-semibold shadow-lg">
-            推荐
+            æŽ¨è
           </span>
         </div>
       )}
 
-      {/* Pro 标签 */}
       {isPro && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
           <span className="rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-1 text-xs font-semibold text-white shadow-lg">
-            {t('oneClickActivate')}
+            {t('proAccessManaged')}
           </span>
         </div>
       )}
 
-      {/* 头部 */}
       <div className="mb-6 pt-2 text-center">
         <div
           className={cn(
@@ -413,7 +389,6 @@ function PricingCard({
         <p className="text-muted-foreground text-sm">{description}</p>
       </div>
 
-      {/* 功能列表 */}
       <ul className="mb-6 space-y-3">
         {benefits.map((benefit, index) => (
           <li key={index} className="flex items-center gap-3 text-sm">
@@ -423,7 +398,6 @@ function PricingCard({
         ))}
       </ul>
 
-      {/* 按钮 */}
       {isCurrent ? (
         <Button variant="outline" className="w-full" disabled>
           <Check className="mr-2 h-4 w-4" />
@@ -432,16 +406,12 @@ function PricingCard({
       ) : isPro ? (
         isAuthenticated ? (
           <Button
-            className="w-full border-none bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg transition-all duration-300 hover:from-amber-600 hover:to-orange-600 hover:shadow-xl"
-            onClick={onAction}
-            disabled={isLoading}
+            variant="outline"
+            className="w-full border-amber-500/30 text-amber-600 hover:bg-amber-500/5 dark:text-amber-400"
+            disabled
           >
-            {isLoading ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Sparkles className="mr-2 h-4 w-4" />
-            )}
-            {t('oneClickActivateButton')}
+            <Sparkles className="mr-2 h-4 w-4" />
+            {t('serverManaged')}
           </Button>
         ) : (
           <div className="text-center">

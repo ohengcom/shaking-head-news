@@ -14,7 +14,7 @@ Comprehensive E2E tests have been implemented for the Shaking Head News applicat
 - Feature cards rendering (6 cards with titles and descriptions)
 - Header and footer visibility
 - Navigation functionality
-- Rotation controls display
+- Rotation wrapper presence
 - Responsive design (mobile/desktop)
 - Accessibility compliance (heading hierarchy, alt text)
 - Error handling (console errors)
@@ -43,21 +43,10 @@ Comprehensive E2E tests have been implemented for the Shaking Head News applicat
 
 **Coverage**: Page rotation functionality
 
-- Rotation controls display
-- Pause/play button functionality
-- Toggle rotation state
-- Rotation mode selector (fixed/continuous)
-- Rotation interval slider
-- Slider adjustment
+- Rotation wrapper rendering
 - Prefers-reduced-motion support
-- LocalStorage persistence
-- Rotation angle indicator
-- Keyboard accessibility
-- Mobile device support (touch targets)
-- Rapid click handling
-- Mode options display
 
-**Tests**: 14 test cases
+**Tests**: 2 test cases
 
 ### 4. `rss-management.spec.ts` ✅
 
@@ -108,10 +97,10 @@ Comprehensive E2E tests have been implemented for the Shaking Head News applicat
 ## Total Test Coverage
 
 - **Total Test Files**: 5
-- **Total Test Cases**: 71
+- **Total Test Cases**: 59
 - **Browser Coverage**: Chromium, Firefox, WebKit
 - **Mobile Coverage**: Mobile Chrome, Mobile Safari
-- **Total Test Executions**: 355+ (71 tests × 5 browsers)
+- **Total Test Executions**: 295+ (59 tests × 5 browsers)
 
 ## Test Scenarios Covered
 
@@ -140,12 +129,8 @@ Comprehensive E2E tests have been implemented for the Shaking Head News applicat
 
 ### ✅ Page Rotation Functionality
 
-- Rotation controls
-- Pause/play toggle
-- Mode selection
-- Interval adjustment
-- State persistence
-- Accessibility features
+- Rotation wrapper rendering
+- Reduced motion handling
 
 ### ✅ RSS Source Management
 
@@ -311,10 +296,8 @@ This implementation satisfies the following requirements from task 17.3:
 
 ✅ **测试页面旋转功能** (Test page rotation functionality)
 
-- Rotation controls
-- Pause/play
-- Mode selection
-- State persistence
+- Rotation wrapper rendering
+- Reduced motion handling
 
 ✅ **测试 RSS 源管理流程** (Test RSS source management flow)
 
@@ -333,8 +316,8 @@ This implementation satisfies the following requirements from task 17.3:
 All E2E tests have been successfully implemented covering:
 
 - 5 comprehensive test files
-- 71 test cases
-- 355+ total test executions (across all browsers)
+- 59 test cases
+- 295+ total test executions (across all browsers)
 - Complete coverage of news browsing, authentication, rotation, RSS management, and user journeys
 
 The tests are ready to run once Playwright browsers are installed with `npx playwright install`.

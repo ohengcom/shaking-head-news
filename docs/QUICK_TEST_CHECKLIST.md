@@ -72,12 +72,13 @@
 
 在 Vercel Dashboard → Settings → Environment Variables 中确认：
 
-- [ ] `NEXTAUTH_SECRET` 已配置
-- [ ] `NEXTAUTH_URL` 已配置（生产 URL）
-- [ ] `GOOGLE_CLIENT_ID` 已配置
-- [ ] `GOOGLE_CLIENT_SECRET` 已配置
+- [ ] `AUTH_SECRET` 已配置
+- [ ] `NEXT_PUBLIC_APP_URL` 已配置（生产 URL）
+- [ ] `AUTH_GOOGLE_ID` 已配置
+- [ ] `AUTH_GOOGLE_SECRET` 已配置
 - [ ] `UPSTASH_REDIS_REST_URL` 已配置
 - [ ] `UPSTASH_REDIS_REST_TOKEN` 已配置
+- [ ] 如需 Pro 白名单，已配置 `PRO_USER_IDS` / `PRO_USER_EMAILS`
 - [ ] `NEWS_API_BASE_URL` 已配置
 
 ---

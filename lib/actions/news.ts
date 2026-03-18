@@ -1,64 +1,47 @@
 'use server'
 
-import { cache } from 'react'
 import { revalidateTag } from 'next/cache'
+import { XMLParser } from 'fast-xml-parser'
+import { z } from 'zod'
+import { auth } from '@/lib/auth'
+import { getRSSSources } from '@/lib/actions/rss'
+import { NewsAPIError } from '@/lib/errors/news-error'
+import { fetchAiNews } from '@/lib/api/daily-news'
+import { getHotList } from '@/lib/api/hot-list'
+import { fetchTrending, type TrendingItem } from '@/lib/api/trending'
 import {
   RawNewsResponseSchema,
   NewsItemSchema,
   type NewsItem,
   type NewsResponse,
 } from '@/types/news'
-import { z } from 'zod'
-import { logError, validateOrThrow, retryWithBackoff } from '@/lib/utils/error-handler'
-import { NewsAPIError } from '@/lib/errors/news-error'
-import { XMLParser } from 'fast-xml-parser'
-import { auth } from '@/lib/auth'
-import { getRSSSources } from '@/lib/actions/rss'
-import { fetchAiNews } from '@/lib/api/daily-news'
-import { fetchTrending, type TrendingItem } from '@/lib/api/trending'
-import { getHotList } from '@/lib/api/hot-list'
+import { logError, retryWithBackoff, validateOrThrow } from '@/lib/utils/error-handler'
+import { fetchExternalJson, fetchExternalText } from '@/lib/utils/external-fetch'
 
-// Configuration
 const NEWS_API_BASE_URL = process.env.NEWS_API_BASE_URL || 'https://news.ravelloh.top'
-const DEFAULT_REVALIDATE = 3600 // 1 hour - optimized for ISR
-const RSS_REVALIDATE = 1800 // 30 minutes - faster updates for RSS
+const DEFAULT_REVALIDATE = 3600
+const RSS_REVALIDATE = 1800
 
-/**
- * Get news from the API with ISR caching
- *
- * @param language - Language for news content ('zh' or 'en')
- * @param source - Optional specific news source
- * @returns News response with items
- */
-export const getNews = cache(async (language: 'zh' | 'en' = 'zh', source?: string) => {
+export async function getNews(
+  language: 'zh' | 'en' = 'zh',
+  source?: string
+): Promise<NewsResponse> {
   const url = source
     ? `${NEWS_API_BASE_URL}/${source}.json?lang=${language}`
     : `${NEWS_API_BASE_URL}/latest.json?lang=${language}`
 
   try {
-    const response = await retryWithBackoff(async () => {
-      const res = await fetch(url, {
+    const validatedRawData = await retryWithBackoff(() =>
+      fetchExternalJson(url, RawNewsResponseSchema, {
+        context: 'getNews',
         next: {
           revalidate: DEFAULT_REVALIDATE,
           tags: ['news', `news-${language}`, source ? `news-${source}` : 'news-latest'],
         },
-        // Enable stale-while-revalidate for better performance
         cache: 'force-cache',
       })
+    )
 
-      if (!res.ok) {
-        throw new NewsAPIError(`Failed to fetch news: ${res.statusText}`, res.status, source)
-      }
-
-      return res
-    })
-
-    const rawData = await response.json()
-
-    // Validate raw response data
-    const validatedRawData = validateOrThrow(RawNewsResponseSchema, rawData)
-
-    // Transform to our format
     const items: NewsItem[] = validatedRawData.content.map((title, index) => ({
       id: `${validatedRawData.date}-${index}`,
       title,
@@ -66,15 +49,12 @@ export const getNews = cache(async (language: 'zh' | 'en' = 'zh', source?: strin
       publishedAt: validatedRawData.date,
     }))
 
-    const transformedData: NewsResponse = {
+    return {
       items,
       total: items.length,
       updatedAt: new Date().toISOString(),
     }
-
-    return transformedData
   } catch (error) {
-    // Log error for monitoring
     logError(error, {
       action: 'getNews',
       url,
@@ -82,7 +62,6 @@ export const getNews = cache(async (language: 'zh' | 'en' = 'zh', source?: strin
       source,
     })
 
-    // Re-throw with context
     if (error instanceof NewsAPIError) {
       throw error
     }
@@ -93,25 +72,16 @@ export const getNews = cache(async (language: 'zh' | 'en' = 'zh', source?: strin
 
     throw new NewsAPIError('Failed to fetch news. Please try again later.', 500, source)
   }
-})
+}
 
-/**
- * Manually refresh news cache
- *
- * @param language - Optional language to refresh
- * @param source - Optional specific source to refresh
- */
 export async function refreshNews(language?: 'zh' | 'en', source?: string) {
   try {
     if (source) {
-      // Refresh specific source
-      revalidateTag(`news-${source}`, { expire: 0 })
+      revalidateTag(`news-${source}`, 'max')
     } else if (language) {
-      // Refresh specific language
-      revalidateTag(`news-${language}`, { expire: 0 })
+      revalidateTag(`news-${language}`, 'max')
     } else {
-      // Refresh all news
-      revalidateTag('news', { expire: 0 })
+      revalidateTag('news', 'max')
     }
 
     return { success: true }
@@ -125,22 +95,25 @@ export async function refreshNews(language?: 'zh' | 'en', source?: string) {
   }
 }
 
-/**
- * Get user's custom news from RSS feeds
- */
 export async function getUserCustomNews(): Promise<NewsItem[]> {
   try {
     const session = await auth()
-    if (!session?.user?.id) return []
+
+    if (!session?.user?.id) {
+      return []
+    }
 
     const rssSources = await getRSSSources()
-    if (rssSources.length === 0) return []
+    if (rssSources.length === 0) {
+      return []
+    }
 
-    // Fetch all enabled RSS feeds in parallel
-    const enabledSources = rssSources.filter((s) => s.enabled !== false)
-    if (enabledSources.length === 0) return []
+    const enabledSources = rssSources.filter((source) => source.enabled !== false)
+    if (enabledSources.length === 0) {
+      return []
+    }
 
-    const results = await Promise.allSettled(enabledSources.map((s) => getRSSNews(s.url)))
+    const results = await Promise.allSettled(enabledSources.map((source) => getRSSNews(source.url)))
     const allItems: NewsItem[] = []
 
     results.forEach((result, index) => {
@@ -168,9 +141,6 @@ export async function getUserCustomNews(): Promise<NewsItem[]> {
   }
 }
 
-/**
- * Parse RSS feed XML to NewsItem array using fast-xml-parser
- */
 function parseRSSFeed(xml: string, sourceUrl: string): NewsItem[] {
   try {
     const parser = new XMLParser({
@@ -178,61 +148,86 @@ function parseRSSFeed(xml: string, sourceUrl: string): NewsItem[] {
       attributeNamePrefix: '@_',
     })
     const result = parser.parse(xml)
-
     const channel = result.rss?.channel || result.feed
     const items = channel?.item || channel?.entry || []
-
-    // Handle single item case (fast-xml-parser might return object instead of array for single item)
     const itemsArray = Array.isArray(items) ? items : [items]
-
     const newsItems: NewsItem[] = []
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    itemsArray.forEach((item: any, index: number) => {
+    itemsArray.forEach((item: unknown, index: number) => {
       try {
-        // Extract fields with fallbacks for different RSS/Atom formats
-        const title = item.title || 'Untitled'
-        const link = item.link || item.guid || ''
-        // Handle Atom link object
-        const url = typeof link === 'object' && link['@_href'] ? link['@_href'] : link
+        const record = typeof item === 'object' && item !== null ? item : {}
+        const typedRecord = record as Record<string, unknown>
+        const title = typedRecord.title || 'Untitled'
+        const link = typedRecord.link || typedRecord.guid || ''
+        const url =
+          typeof link === 'object' && link && '@_href' in link
+            ? String((link as Record<string, unknown>)['@_href'] || '')
+            : String(link || '')
 
-        let description = item.description || item.summary || item.content || ''
-        // Handle Atom content object
-        if (typeof description === 'object' && description['#text']) {
-          description = description['#text']
+        let descriptionValue: unknown =
+          typedRecord.description || typedRecord.summary || typedRecord.content || ''
+        if (
+          typeof descriptionValue === 'object' &&
+          descriptionValue &&
+          '#text' in descriptionValue
+        ) {
+          descriptionValue = String((descriptionValue as Record<string, unknown>)['#text'] || '')
         }
 
-        const pubDate = item.pubDate || item.published || item.updated || new Date().toISOString()
-        const guid = item.guid || item.id || url
+        const pubDate =
+          typedRecord.pubDate ||
+          typedRecord.published ||
+          typedRecord.updated ||
+          new Date().toISOString()
+        const guid = typedRecord.guid || typedRecord.id || url
 
-        // Ensure description is a string
+        let description =
+          typeof descriptionValue === 'string'
+            ? descriptionValue
+            : typeof descriptionValue === 'number'
+              ? String(descriptionValue)
+              : ''
         if (typeof description !== 'string') {
-          // Try to handle other object formats or fallback to empty string
-          if (typeof description === 'number') {
-            description = String(description)
-          } else {
-            description = ''
-          }
+          description = ''
         }
 
-        // Try to extract image
         let imageUrl: string | undefined
-        if (item.enclosure && item.enclosure['@_type']?.startsWith('image')) {
-          imageUrl = item.enclosure['@_url']
-        } else if (item['media:content'] && item['media:content']['@_url']) {
-          imageUrl = item['media:content']['@_url']
-        } else if (item['media:group'] && item['media:group']['media:content']) {
-          const mediaContent = item['media:group']['media:content']
-          imageUrl = Array.isArray(mediaContent) ? mediaContent[0]['@_url'] : mediaContent['@_url']
+        const enclosure =
+          typeof typedRecord.enclosure === 'object' && typedRecord.enclosure
+            ? (typedRecord.enclosure as Record<string, unknown>)
+            : undefined
+        if (enclosure?.['@_type'] && String(enclosure['@_type']).startsWith('image')) {
+          imageUrl = typeof enclosure['@_url'] === 'string' ? enclosure['@_url'] : undefined
+        } else if (
+          typeof typedRecord['media:content'] === 'object' &&
+          typedRecord['media:content'] &&
+          '@_url' in (typedRecord['media:content'] as Record<string, unknown>)
+        ) {
+          imageUrl = String((typedRecord['media:content'] as Record<string, unknown>)['@_url'])
+        } else if (
+          typeof typedRecord['media:group'] === 'object' &&
+          typedRecord['media:group'] &&
+          'media:content' in (typedRecord['media:group'] as Record<string, unknown>)
+        ) {
+          const mediaContent = (typedRecord['media:group'] as Record<string, unknown>)[
+            'media:content'
+          ]
+          if (
+            Array.isArray(mediaContent) &&
+            mediaContent[0] &&
+            typeof mediaContent[0] === 'object'
+          ) {
+            imageUrl = String((mediaContent[0] as Record<string, unknown>)['@_url'] || '')
+          } else if (typeof mediaContent === 'object' && mediaContent) {
+            imageUrl = String((mediaContent as Record<string, unknown>)['@_url'] || '')
+          }
         } else {
-          // Try to extract from description HTML
           const imgMatch = description.match(/<img.*?src="(.*?)".*?>/)
-          if (imgMatch) {
+          if (imgMatch?.[1]) {
             imageUrl = imgMatch[1]
           }
         }
 
-        // Clean HTML from description
         const cleanDescription = description
           .replace(/<[^>]*>/g, '')
           .replace(/&nbsp;/g, ' ')
@@ -242,19 +237,24 @@ function parseRSSFeed(xml: string, sourceUrl: string): NewsItem[] {
           .replace(/&quot;/g, '"')
           .trim()
 
-        // Convert pubDate to ISO format
         let isoDate: string
         try {
-          isoDate = new Date(pubDate).toISOString()
+          isoDate = new Date(String(pubDate)).toISOString()
         } catch {
           isoDate = new Date().toISOString()
         }
 
         const newsItem = validateOrThrow(NewsItemSchema, {
-          id: typeof guid === 'object' ? guid['#text'] || `${sourceUrl}-${index}` : guid,
-          title: typeof title === 'object' ? title['#text'] || 'Untitled' : title.trim(),
+          id:
+            typeof guid === 'object' && guid && '#text' in (guid as Record<string, unknown>)
+              ? String((guid as Record<string, unknown>)['#text'] || `${sourceUrl}-${index}`)
+              : String(guid || `${sourceUrl}-${index}`),
+          title:
+            typeof title === 'object' && title && '#text' in (title as Record<string, unknown>)
+              ? String((title as Record<string, unknown>)['#text'] || 'Untitled')
+              : String(title).trim(),
           description: cleanDescription || undefined,
-          url: typeof url === 'string' ? url.trim() : '',
+          url: url.trim(),
           source: sourceUrl,
           publishedAt: isoDate,
           imageUrl: imageUrl || undefined,
@@ -262,7 +262,6 @@ function parseRSSFeed(xml: string, sourceUrl: string): NewsItem[] {
 
         newsItems.push(newsItem)
       } catch (error) {
-        // Skip invalid items but log for debugging
         logError(error, {
           action: 'parseRSSFeed',
           sourceUrl,
@@ -281,38 +280,23 @@ function parseRSSFeed(xml: string, sourceUrl: string): NewsItem[] {
   }
 }
 
-/**
- * Get news from RSS feed
- *
- * @param rssUrl - URL of the RSS feed
- * @returns Array of news items
- */
 export async function getRSSNews(rssUrl: string): Promise<NewsItem[]> {
   try {
-    const response = await retryWithBackoff(async () => {
-      const res = await fetch(rssUrl, {
+    const { text, finalUrl } = await retryWithBackoff(() =>
+      fetchExternalText(rssUrl, {
+        context: 'getRSSNews',
+        allowHttp: true,
+        timeoutMs: 10000,
+        maxBytes: 2 * 1024 * 1024,
         next: {
           revalidate: RSS_REVALIDATE,
           tags: ['rss', `rss-${rssUrl}`],
         },
-        headers: {
-          'User-Agent': 'ShakingHeadNews/1.0',
-        },
-        // Enable stale-while-revalidate for RSS feeds
         cache: 'force-cache',
       })
+    )
 
-      if (!res.ok) {
-        throw new NewsAPIError(`Failed to fetch RSS feed: ${res.statusText}`, res.status, rssUrl)
-      }
-
-      return res
-    })
-
-    const xml = await response.text()
-
-    // Parse RSS XML
-    const items = parseRSSFeed(xml, rssUrl)
+    const items = parseRSSFeed(text, finalUrl.toString())
 
     if (items.length === 0) {
       throw new NewsAPIError('No valid items found in RSS feed', 404, rssUrl)
@@ -337,14 +321,9 @@ export async function getRSSNews(rssUrl: string): Promise<NewsItem[]> {
   }
 }
 
-/**
- * Refresh RSS feed cache
- *
- * @param rssUrl - URL of the RSS feed to refresh
- */
 export async function refreshRSSFeed(rssUrl: string) {
   try {
-    revalidateTag(`rss-${rssUrl}`, { expire: 0 })
+    revalidateTag(`rss-${rssUrl}`, 'max')
     return { success: true }
   } catch (error) {
     logError(error, {
@@ -355,13 +334,42 @@ export async function refreshRSSFeed(rssUrl: string) {
   }
 }
 
-/**
- * Get AI News as standard NewsItem[]
- */
+export async function refreshRSSCache() {
+  try {
+    revalidateTag('rss', 'max')
+    return { success: true }
+  } catch (error) {
+    logError(error, {
+      action: 'refreshRSSCache',
+    })
+    throw new NewsAPIError('Failed to refresh RSS cache')
+  }
+}
+
+export async function refreshHotList(sourceId?: string) {
+  try {
+    if (sourceId) {
+      revalidateTag(`hotlist-${sourceId}`, 'max')
+    } else {
+      revalidateTag('hotlist', 'max')
+    }
+
+    return { success: true }
+  } catch (error) {
+    logError(error, {
+      action: 'refreshHotList',
+      sourceId,
+    })
+    throw new NewsAPIError('Failed to refresh hot list cache')
+  }
+}
+
 export async function getAiNewsItems(): Promise<NewsItem[]> {
   try {
     const aiNews = await fetchAiNews()
-    if (!aiNews) return []
+    if (!aiNews) {
+      return []
+    }
 
     return aiNews.map((item, index) => ({
       id: `ai-${item.date}-${index}`,
@@ -378,13 +386,12 @@ export async function getAiNewsItems(): Promise<NewsItem[]> {
   }
 }
 
-/**
- * Get Trending News as standard NewsItem[]
- */
 export async function getTrendingNewsItems(source: string = 'douyin'): Promise<NewsItem[]> {
   try {
     const trending = await fetchTrending(source)
-    if (!trending) return []
+    if (!trending) {
+      return []
+    }
 
     return trending.map((item: TrendingItem, index: number) => ({
       id: `trending-${source}-${index}`,
@@ -400,18 +407,17 @@ export async function getTrendingNewsItems(source: string = 'douyin'): Promise<N
   }
 }
 
-/**
- * Get Hot List News as standard NewsItem[]
- */
 export async function getHotListNews(sourceId: string, sourceName: string): Promise<NewsItem[]> {
   try {
     const items = await getHotList(sourceId)
-    if (!items) return []
+    if (!items) {
+      return []
+    }
 
     return items.map((item, index) => ({
       id: `hot-${sourceId}-${index}`,
       title: item.title,
-      description: item.hot ? `热度: ${item.hot}` : undefined,
+      description: item.hot ? `çƒ­åº¦: ${item.hot}` : undefined,
       url: item.url,
       source: sourceName,
       publishedAt: new Date().toISOString(),

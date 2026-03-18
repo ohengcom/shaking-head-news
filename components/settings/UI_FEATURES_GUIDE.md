@@ -80,26 +80,25 @@ This guide explains how to use and customize the UI/UX enhancement features impl
 - 🌙 Moon icon = Currently in light mode (click to switch to dark)
 - ☀️ Sun icon = Currently in dark mode (click to switch to light)
 
-### 4. Rotation Controls
+### 4. Rotation Settings
 
-**Location**: Home Page (in a card component)
+**Location**: Settings Page → Rotation Section
 
 **Features**:
 
-#### Pause/Resume Button
+#### Animation Toggle
 
-- **Pause**: Stops the page rotation animation
-- **Resume**: Restarts the page rotation animation
-- Icon changes based on state (Play ▶️ / Pause ⏸️)
+- **On**: Enables page rotation animation
+- **Off**: Pauses page rotation animation
 
 #### Rotation Mode
 
-- **Fixed Mode**: Page stays at a fixed angle (minimal movement)
+- **Fixed Mode**: Page follows a fixed angle
 - **Continuous Mode**: Page rotates at regular intervals
 
-#### Rotation Speed Slider
+#### Rotation Interval Slider
 
-- **Range**: 5 to 300 seconds
+- **Range**: 5 to 60 seconds
 - **Default**: 10 seconds
 - **Only visible in Continuous Mode**
 - Adjusts how often the page rotates to a new angle
@@ -108,8 +107,7 @@ This guide explains how to use and customize the UI/UX enhancement features impl
 
 - Changes apply instantly
 - Settings persist across sessions
-- Respects `prefers-reduced-motion` accessibility setting
-- Can be configured in Settings Page as well
+- Ignores `prefers-reduced-motion` (rotation is the core feature)
 
 ## For Developers
 
@@ -232,11 +230,10 @@ const { setMyNewSetting } = useUIStore()
 - Respects system preferences
 - Smooth transitions avoid jarring changes
 
-### Rotation Controls
+### Rotation Settings
 
-- Respects `prefers-reduced-motion` media query
-- Animations can be completely disabled
-- Pause button provides immediate control
+- Ignores `prefers-reduced-motion` media query
+- Animations can be disabled via the settings toggle
 
 ## Troubleshooting
 
@@ -265,8 +262,7 @@ const { setMyNewSetting } = useUIStore()
 
 1. Check if animations are enabled in settings
 2. Verify browser supports CSS transforms
-3. Check if `prefers-reduced-motion` is enabled
-4. Look for JavaScript errors in console
+3. Look for JavaScript errors in console
 
 ## Performance Notes
 

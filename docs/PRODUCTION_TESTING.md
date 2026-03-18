@@ -111,8 +111,8 @@
 **常见问题**:
 
 - ❌ 登录失败 → 检查 Google OAuth 配置
-- ❌ 回调错误 → 检查 NEXTAUTH_URL 和回调 URL 配置
-- ❌ 会话丢失 → 检查 NEXTAUTH_SECRET 配置
+- ❌ 回调错误 → 检查 OAuth 回调 URL 和部署域名配置
+- ❌ 会话丢失 → 检查 AUTH_SECRET 配置
 
 **检查清单**:
 
@@ -123,10 +123,11 @@ Google Cloud Console 配置:
 [ ] 客户端 ID 和密钥正确
 
 Vercel 环境变量:
-[ ] GOOGLE_CLIENT_ID
-[ ] GOOGLE_CLIENT_SECRET
-[ ] NEXTAUTH_SECRET
-[ ] NEXTAUTH_URL
+[ ] AUTH_GOOGLE_ID
+[ ] AUTH_GOOGLE_SECRET
+[ ] AUTH_SECRET
+[ ] NEXT_PUBLIC_APP_URL
+[ ] 如需 Pro 白名单，已配置 PRO_USER_IDS / PRO_USER_EMAILS
 ```
 
 ---
@@ -489,7 +490,7 @@ https://your-site.vercel.app/non-existent-page
 
 - OAuth 回调 URL 未配置
 - 客户端 ID/密钥错误
-- NEXTAUTH_URL 配置错误
+- OAuth 回调 URL 或部署域名配置错误
 
 **排查步骤**:
 

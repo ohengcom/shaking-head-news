@@ -45,7 +45,7 @@ Comprehensive settings panel (Client Component):
 
 2. **Rotation Settings**
    - Rotation mode (Fixed/Continuous)
-   - Rotation interval slider (5-300 seconds)
+   - Rotation interval slider (5-60 seconds)
    - Animation toggle
 
 3. **Health Reminders**
@@ -88,7 +88,7 @@ Documentation for settings components and usage
 ✅ **2.4**: Settings synced via Server Actions within 3 seconds
 
 - updateSettings() uses Server Actions for instant sync
-- Optimistic UI updates with useTransition
+- Optimistic UI updates with local pending state
 
 ✅ **5.1**: Font size adjustment options
 
@@ -100,7 +100,7 @@ Documentation for settings components and usage
 
 ✅ **5.4**: Rotation speed slider
 
-- Slider component with range 5-300 seconds
+- Slider component with range 5-60 seconds
 - Real-time value display
 
 ## Technical Implementation
@@ -108,7 +108,7 @@ Documentation for settings components and usage
 ### State Management
 
 - Local state for form values (useState)
-- Transition states for async operations (useTransition)
+- Local pending state for async operations (useState)
 - Separate transitions for save and reset operations
 
 ### Data Flow

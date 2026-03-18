@@ -27,13 +27,12 @@ Before deploying, ensure you have:
 Set these in your Vercel project settings (Settings > Environment Variables):
 
 ```bash
-# NextAuth Configuration
-NEXTAUTH_SECRET=<generate-with-openssl-rand-base64-32>
-NEXTAUTH_URL=https://your-domain.vercel.app
+# Auth.js Configuration
+AUTH_SECRET=<generate-with-openssl-rand-base64-32>
 
 # Google OAuth
-GOOGLE_CLIENT_ID=<your-google-client-id>
-GOOGLE_CLIENT_SECRET=<your-google-client-secret>
+AUTH_GOOGLE_ID=<your-google-client-id>
+AUTH_GOOGLE_SECRET=<your-google-client-secret>
 
 # Upstash Redis (Vercel Marketplace Storage)
 UPSTASH_REDIS_REST_URL=<your-upstash-redis-rest-url>
@@ -42,9 +41,13 @@ UPSTASH_REDIS_REST_TOKEN=<your-upstash-redis-rest-token>
 # App Configuration
 NEXT_PUBLIC_APP_URL=https://your-domain.vercel.app
 NEWS_API_BASE_URL=https://news.ravelloh.top
+
+# Optional: server-managed Pro access
+PRO_USER_IDS=<comma-separated-internal-user-ids>
+PRO_USER_EMAILS=<comma-separated-user-emails>
 ```
 
-### Generating NEXTAUTH_SECRET
+### Generating AUTH_SECRET
 
 Run this command in your terminal:
 
@@ -52,7 +55,9 @@ Run this command in your terminal:
 openssl rand -base64 32
 ```
 
-Copy the output and use it as your `NEXTAUTH_SECRET`.
+Copy the output and use it as your `AUTH_SECRET`.
+
+Auth.js v5 also supports generating this secret with `npx auth secret`.
 
 ### Setting Up Google OAuth
 
@@ -76,6 +81,8 @@ Copy the output and use it as your `NEXTAUTH_SECRET`.
 4. Select "KV (Redis)" powered by Upstash
 5. Choose a region (Hong Kong or Singapore recommended)
 6. The environment variables will be automatically added to your project
+
+Production deployments require Redis. The app will not fall back to in-memory storage outside development and test environments.
 
 #### Option 2: Direct from Upstash
 
@@ -156,7 +163,7 @@ For Hobby accounts, Vercel automatically routes traffic to the nearest available
 1. Go to Settings > Domains
 2. Add your custom domain
 3. Update DNS records as instructed
-4. Update `NEXTAUTH_URL` and `NEXT_PUBLIC_APP_URL` environment variables
+4. Update `NEXT_PUBLIC_APP_URL`
 5. Update Google OAuth authorized redirect URIs
 
 ## Post-Deployment
@@ -222,10 +229,10 @@ npm run lint
 
 **Solution**:
 
-1. Verify `NEXTAUTH_URL` matches your deployment URL
-2. Check Google OAuth authorized redirect URIs include:
+1. Check Google OAuth authorized redirect URIs include:
    - `https://your-domain.vercel.app/api/auth/callback/google`
-3. Ensure `NEXTAUTH_SECRET` is set
+2. Ensure the request is reaching the expected deployment domain
+3. Ensure `AUTH_SECRET` is set
 
 **Issue**: "Invalid state" error
 
@@ -300,9 +307,9 @@ Vercel automatically deploys:
 
 Before going live:
 
-- [ ] `NEXTAUTH_SECRET` is set and secure
+- [ ] `AUTH_SECRET` is set and secure
 - [ ] Google OAuth credentials are production-ready
-- [ ] Upstash Redis is in production mode
+- [ ] Upstash Redis is configured; production must not rely on in-memory storage
 - [ ] All environment variables are set for production
 - [ ] Custom domain has SSL certificate
 - [ ] Security headers are configured (automatic via `next.config.js`)
@@ -329,7 +336,7 @@ Before going live:
 - **Vercel Documentation**: [vercel.com/docs](https://vercel.com/docs)
 - **Next.js Documentation**: [nextjs.org/docs](https://nextjs.org/docs)
 - **Upstash Documentation**: [docs.upstash.com](https://docs.upstash.com)
-- **NextAuth.js Documentation**: [next-auth.js.org](https://next-auth.js.org)
+- **Auth.js Documentation**: [authjs.dev](https://authjs.dev)
 
 ## Cost Estimation
 
@@ -353,6 +360,6 @@ Before going live:
 
 ---
 
-**Last Updated**: 2025-01-12
+**Last Updated**: 2026-03-18
 
 For questions or issues, please open an issue on GitHub.

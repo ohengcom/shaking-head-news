@@ -38,7 +38,7 @@ const settings = await getUserSettings()
 **State Management:**
 
 - Uses local state for form values
-- Uses `useTransition` for pending states during save/reset
+- Uses local pending state during save/reset
 - Syncs with Vercel Marketplace Storage via Server Actions
 
 **Server Actions:**
@@ -69,7 +69,7 @@ Resets user settings to default values. Requires authentication.
 - **2.4**: Settings synced via Server Actions within 3 seconds
 - **5.1**: Font size adjustment (small, medium, large, xlarge)
 - **5.2**: Compact layout mode toggle
-- **5.4**: Rotation speed slider (5-300 seconds)
+- **5.4**: Rotation speed slider (5-60 seconds)
 
 ## UI Components Used
 

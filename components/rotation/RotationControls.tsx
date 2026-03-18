@@ -83,7 +83,7 @@ export function RotationControls() {
                 if (value !== undefined) setInterval(value)
               }}
               min={5}
-              max={300}
+              max={60}
               step={5}
               className="w-full"
             />

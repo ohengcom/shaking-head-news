@@ -60,11 +60,18 @@ async function StatsContent() {
     // 获取用户设置（获取每日目标）
     const settings = await getUserSettings()
     const dailyGoal = settings.dailyGoal || 30
+    const notificationsEnabled = settings.notificationsEnabled ?? true
 
     // 获取统计数据
     const stats = await getSummaryStats()
 
-    return <StatsDisplay initialStats={stats} dailyGoal={dailyGoal} />
+    return (
+      <StatsDisplay
+        initialStats={stats}
+        dailyGoal={dailyGoal}
+        notificationsEnabled={notificationsEnabled}
+      />
+    )
   } catch (error) {
     console.error('[StatsPage] Error loading stats:', error)
 

@@ -30,13 +30,8 @@ Tests user authentication and settings flow:
 
 Tests page rotation functionality:
 
-- Rotation controls display
-- Pause/play functionality
-- Mode selection (fixed/continuous)
-- Interval adjustment
-- LocalStorage persistence
-- Reduced motion support
-- Keyboard accessibility
+- Rotation wrapper rendering
+- Reduced motion preference handling
 
 ### 4. `rss-management.spec.ts`
 
@@ -251,7 +246,7 @@ Current E2E test coverage includes:
 - ✅ News browsing flow
 - ✅ User authentication flow
 - ✅ Settings page access
-- ✅ Page rotation functionality
+- ✅ Page rotation wrapper functionality
 - ✅ RSS management access
 - ✅ Navigation and routing
 - ✅ Responsive design

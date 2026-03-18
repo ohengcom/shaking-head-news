@@ -51,7 +51,7 @@
 
 **Requirement 4.1**: ✅ ISR with 1.5s first load (cached)
 **Requirement 4.2**: ✅ 3600s background revalidation
-**Requirement 4.3**: ✅ Manual refresh with revalidateTag
+**Requirement 4.3**: ✅ Manual refresh with updateTag
 **Requirement 4.4**: ✅ Native Fetch with next.revalidate
 **Requirement 4.5**: ✅ Error handling with retry logic
 **Requirement 4.6**: ✅ 800ms cache load time
@@ -69,9 +69,9 @@ lib/actions/
 
 **Key Technologies:**
 
-- Next.js 15 Server Actions
+- Next.js 16 Server Actions
 - React `cache()` for deduplication
-- ISR with `revalidateTag()`
+- ISR with `updateTag()`
 - Zod for validation
 - Native Fetch API
 - TypeScript strict mode
@@ -116,11 +116,14 @@ export default async function NewsPage() {
 ```typescript
 'use client'
 import { refreshNews } from '@/lib/actions/news'
+import { useRouter } from 'next/navigation'
 
 export function RefreshButton() {
+  const router = useRouter()
+
   const handleRefresh = async () => {
     await refreshNews('zh')
-    window.location.reload()
+    router.refresh()
   }
   return <button onClick={handleRefresh}>Refresh</button>
 }

@@ -104,6 +104,39 @@ import { refreshRSSFeed } from '@/lib/actions/news'
 await refreshRSSFeed('https://example.com/feed.xml')
 ```
 
+#### `refreshRSSCache()`
+
+Manually refreshes all RSS feed caches.
+
+**Returns:** `Promise<{ success: boolean }>`
+
+**Example:**
+
+```typescript
+import { refreshRSSCache } from '@/lib/actions/news'
+
+await refreshRSSCache()
+```
+
+#### `refreshHotList(sourceId?)`
+
+Manually refreshes hot list cache.
+
+**Parameters:**
+
+- `sourceId`: `string` (optional) - Specific hot list source to refresh
+
+**Returns:** `Promise<{ success: boolean }>`
+
+**Example:**
+
+```typescript
+import { refreshHotList } from '@/lib/actions/news'
+
+await refreshHotList()
+await refreshHotList('weibo')
+```
+
 ### Error Handling
 
 All functions include:
@@ -149,7 +182,7 @@ The news service uses Next.js Incremental Static Regeneration (ISR) for optimal 
 1. **First request**: Fetches fresh data from API
 2. **Subsequent requests**: Serves cached data instantly
 3. **Background revalidation**: Updates cache after revalidate period
-4. **Manual refresh**: Use `refreshNews()` or `refreshRSSFeed()` to force update
+4. **Manual refresh**: Use `refreshNews()`, `refreshRSSFeed()`, `refreshRSSCache()`, or `refreshHotList()` to force update
 
 This ensures:
 

@@ -1,9 +1,12 @@
 'use server'
 
+import { revalidatePath, revalidateTag } from 'next/cache'
+import { XMLParser } from 'fast-xml-parser'
 import { auth } from '@/lib/auth'
+import { rateLimitByAction, RateLimitTiers } from '@/lib/rate-limit'
 import { getStorageItem, setStorageItem, StorageKeys } from '@/lib/storage'
-import { RSSSourceSchema, RSSSource } from '@/types/rss'
-import { revalidateTag, revalidatePath } from 'next/cache'
+import { getUserTier } from '@/lib/tier-server'
+import { RSSSourceSchema, type RSSSource } from '@/types/rss'
 import {
   AuthError,
   NotFoundError,
@@ -11,11 +14,9 @@ import {
   logError,
   validateOrThrow,
 } from '@/lib/utils/error-handler'
-import { rateLimitByAction, RateLimitTiers } from '@/lib/rate-limit'
-import { sanitizeUrl, sanitizeString, sanitizeObject } from '@/lib/utils/input-validation'
-import { getUserTier } from '@/lib/tier-server'
+import { sanitizeObject, sanitizeString } from '@/lib/utils/input-validation'
+import { assertSafeExternalUrl, verifyExternalUrlReachable } from '@/lib/utils/external-fetch'
 
-// 默认 RSS 源（Guest 用户可见）
 const DEFAULT_RSS_SOURCES: RSSSource[] = [
   {
     id: 'default-1',
@@ -52,12 +53,25 @@ const DEFAULT_RSS_SOURCES: RSSSource[] = [
   },
 ]
 
-// 获取默认 RSS 源（Guest 用户）
+async function validateRssUrl(url: string): Promise<string> {
+  const safeUrl = await assertSafeExternalUrl(url, { allowHttp: true })
+
+  await verifyExternalUrlReachable(safeUrl.toString(), {
+    context: 'validateRssUrl',
+    allowHttp: true,
+    timeoutMs: 5000,
+    headers: {
+      'User-Agent': 'ShakingHeadNews/1.0',
+    },
+  })
+
+  return safeUrl.toString()
+}
+
 export async function getDefaultRSSSources(): Promise<RSSSource[]> {
   return DEFAULT_RSS_SOURCES
 }
 
-// 获取用户的 RSS 源列表
 export async function getRSSSources(): Promise<RSSSource[]> {
   try {
     const session = await auth()
@@ -68,7 +82,8 @@ export async function getRSSSources(): Promise<RSSSource[]> {
 
     const key = StorageKeys.userRSSSources(session.user.id)
     const sources = (await getStorageItem<unknown[]>(key)) || []
-    return sources.map((s: unknown) => validateOrThrow(RSSSourceSchema, s))
+
+    return sources.map((source) => validateOrThrow(RSSSourceSchema, source))
   } catch (error) {
     logError(error, {
       action: 'getRSSSources',
@@ -77,7 +92,6 @@ export async function getRSSSources(): Promise<RSSSource[]> {
   }
 }
 
-// 添加 RSS 源
 export async function addRSSSource(source: Omit<RSSSource, 'id' | 'order' | 'failureCount'>) {
   try {
     const session = await auth()
@@ -86,7 +100,6 @@ export async function addRSSSource(source: Omit<RSSSource, 'id' | 'order' | 'fai
       throw new AuthError('Please sign in to add RSS sources')
     }
 
-    // 速率限制：每15分钟最多添加5个RSS源
     const rateLimitResult = await rateLimitByAction(session.user.id, 'add-rss', {
       ...RateLimitTiers.STRICT,
     })
@@ -95,15 +108,10 @@ export async function addRSSSource(source: Omit<RSSSource, 'id' | 'order' | 'fai
       throw new Error('Too many RSS sources added. Please try again later.')
     }
 
-    // 清理和验证输入
-    const sanitizedUrl = sanitizeUrl(source.url)
-    if (!sanitizedUrl) {
-      throw new ValidationError('Invalid RSS URL')
-    }
-
+    const safeUrl = await validateRssUrl(source.url)
     const sanitizedSource = {
       ...source,
-      url: sanitizedUrl,
+      url: safeUrl,
       name: sanitizeString(source.name, { maxLength: 200 }),
       description: source.description
         ? sanitizeString(source.description, { maxLength: 500 })
@@ -113,7 +121,6 @@ export async function addRSSSource(source: Omit<RSSSource, 'id' | 'order' | 'fai
 
     const sources = await getRSSSources()
 
-    // 限制每个用户最多50个RSS源
     if (sources.length >= 50) {
       throw new ValidationError('Maximum number of RSS sources (50) reached')
     }
@@ -125,35 +132,13 @@ export async function addRSSSource(source: Omit<RSSSource, 'id' | 'order' | 'fai
       failureCount: 0,
     }
 
-    // 验证 RSS URL
-    try {
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 5000)
-
-      const response = await fetch(newSource.url, {
-        method: 'HEAD',
-        signal: controller.signal,
-      })
-
-      clearTimeout(timeoutId)
-
-      if (!response.ok) {
-        throw new ValidationError('RSS URL is not accessible')
-      }
-    } catch (error) {
-      if (error instanceof ValidationError) {
-        throw error
-      }
-      throw new ValidationError('Invalid RSS URL or URL is not accessible')
-    }
-
-    // Validate the source data
     const validatedSource = validateOrThrow(RSSSourceSchema, newSource)
-
     sources.push(validatedSource)
-    const key = StorageKeys.userRSSSources(session.user.id)
-    await setStorageItem(key, sources)
 
+    await setStorageItem(StorageKeys.userRSSSources(session.user.id), sources)
+
+    revalidateTag('rss', 'max')
+    revalidateTag(`rss-${validatedSource.url}`, 'max')
     revalidatePath('/rss')
 
     return validatedSource
@@ -162,11 +147,15 @@ export async function addRSSSource(source: Omit<RSSSource, 'id' | 'order' | 'fai
       action: 'addRSSSource',
       source,
     })
-    throw error
+
+    if (error instanceof ValidationError || error instanceof AuthError) {
+      throw error
+    }
+
+    throw new ValidationError('Invalid RSS URL or URL is not accessible')
   }
 }
 
-// 更新 RSS 源
 export async function updateRSSSource(id: string, updates: Partial<RSSSource>) {
   try {
     const session = await auth()
@@ -175,7 +164,6 @@ export async function updateRSSSource(id: string, updates: Partial<RSSSource>) {
       throw new AuthError('Please sign in to update RSS sources')
     }
 
-    // 速率限制：每分钟最多200次更新 (Relaxed +)
     const rateLimitResult = await rateLimitByAction(session.user.id, 'update-rss', {
       limit: 200,
       window: 60,
@@ -185,60 +173,51 @@ export async function updateRSSSource(id: string, updates: Partial<RSSSource>) {
       throw new Error('Too many requests. Please try again later.')
     }
 
-    // 清理输入数据
     const sanitizedUpdates = sanitizeObject(updates, {
       maxLength: 500,
       allowHtml: false,
     })
 
-    // 如果更新URL，验证它
-    if (sanitizedUpdates.url) {
-      const sanitizedUrl = sanitizeUrl(sanitizedUpdates.url)
-      if (!sanitizedUrl) {
-        throw new ValidationError('Invalid RSS URL')
-      }
-      sanitizedUpdates.url = sanitizedUrl
+    if (sanitizedUpdates.url && typeof sanitizedUpdates.url === 'string') {
+      sanitizedUpdates.url = await validateRssUrl(sanitizedUpdates.url)
     }
 
     const sources = await getRSSSources()
-    const index = sources.findIndex((s) => s.id === id)
+    const index = sources.findIndex((source) => source.id === id)
 
     if (index === -1) {
       throw new NotFoundError('RSS source not found')
     }
 
-    // 验证用户拥有此RSS源
-    const source = sources[index]
-    if (!source) {
+    const currentSource = sources[index]
+    if (!currentSource) {
       throw new AuthError('Unauthorized to update this RSS source')
     }
 
-    const updatedSource = { ...source, ...sanitizedUpdates }
+    const updatedSource = validateOrThrow(RSSSourceSchema, {
+      ...currentSource,
+      ...sanitizedUpdates,
+    })
 
-    // Validate the updated source
-    const validatedSource = validateOrThrow(RSSSourceSchema, updatedSource)
+    sources[index] = updatedSource
+    await setStorageItem(StorageKeys.userRSSSources(session.user.id), sources)
 
-    sources[index] = validatedSource
-    const key = StorageKeys.userRSSSources(session.user.id)
-    await setStorageItem(key, sources)
-
-    // 清除该源的缓存
-    revalidateTag(`rss-${validatedSource.url}`, { expire: 0 })
+    revalidateTag('rss', 'max')
+    revalidateTag(`rss-${currentSource.url}`, 'max')
+    revalidateTag(`rss-${updatedSource.url}`, 'max')
     revalidatePath('/rss')
 
-    return validatedSource
+    return updatedSource
   } catch (error) {
     logError(error, {
       action: 'updateRSSSource',
       id,
       updates,
     })
-    console.error('Error updating RSS source:', error)
     throw error
   }
 }
 
-// 删除 RSS 源
 export async function deleteRSSSource(id: string) {
   try {
     const session = await auth()
@@ -248,19 +227,17 @@ export async function deleteRSSSource(id: string) {
     }
 
     const sources = await getRSSSources()
-    const sourceToDelete = sources.find((s) => s.id === id)
+    const sourceToDelete = sources.find((source) => source.id === id)
 
     if (!sourceToDelete) {
       throw new NotFoundError('RSS source not found')
     }
 
-    const filtered = sources.filter((s) => s.id !== id)
+    const filteredSources = sources.filter((source) => source.id !== id)
+    await setStorageItem(StorageKeys.userRSSSources(session.user.id), filteredSources)
 
-    const key = StorageKeys.userRSSSources(session.user.id)
-    await setStorageItem(key, filtered)
-
-    // Clear cache for the deleted source
-    revalidateTag(`rss-${sourceToDelete.url}`, { expire: 0 })
+    revalidateTag('rss', 'max')
+    revalidateTag(`rss-${sourceToDelete.url}`, 'max')
     revalidatePath('/rss')
   } catch (error) {
     logError(error, {
@@ -271,7 +248,6 @@ export async function deleteRSSSource(id: string) {
   }
 }
 
-// 重新排序 RSS 源
 export async function reorderRSSSources(sourceIds: string[]) {
   try {
     const session = await auth()
@@ -282,15 +258,15 @@ export async function reorderRSSSources(sourceIds: string[]) {
 
     const sources = await getRSSSources()
     const reordered = sourceIds.map((id, index) => {
-      const source = sources.find((s) => s.id === id)
+      const source = sources.find((item) => item.id === id)
       if (!source) {
         throw new NotFoundError(`Source ${id} not found`)
       }
+
       return { ...source, order: index }
     })
 
-    const key = StorageKeys.userRSSSources(session.user.id)
-    await setStorageItem(key, reordered)
+    await setStorageItem(StorageKeys.userRSSSources(session.user.id), reordered)
     revalidatePath('/rss')
     return reordered
   } catch (error) {
@@ -302,9 +278,8 @@ export async function reorderRSSSources(sourceIds: string[]) {
   }
 }
 
-// XML 属性值转义，防止 XSS/注入
-function escapeXmlAttr(str: string): string {
-  return str
+function escapeXmlAttr(value: string): string {
+  return value
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
@@ -312,7 +287,6 @@ function escapeXmlAttr(str: string): string {
     .replace(/'/g, '&apos;')
 }
 
-// 导出 OPML
 export async function exportOPML() {
   try {
     const session = await auth()
@@ -327,7 +301,7 @@ export async function exportOPML() {
       throw new ValidationError('No RSS sources to export')
     }
 
-    const opml = `<?xml version="1.0" encoding="UTF-8"?>
+    return `<?xml version="1.0" encoding="UTF-8"?>
 <opml version="2.0">
   <head>
     <title>Shaking Head News - RSS Sources</title>
@@ -335,18 +309,16 @@ export async function exportOPML() {
   <body>
     ${sources
       .map(
-        (s) => `
-    <outline text="${escapeXmlAttr(s.name)}" 
-             type="rss" 
-             xmlUrl="${escapeXmlAttr(s.url)}" 
-             htmlUrl="${escapeXmlAttr(s.url)}" />
+        (source) => `
+    <outline text="${escapeXmlAttr(source.name)}"
+             type="rss"
+             xmlUrl="${escapeXmlAttr(source.url)}"
+             htmlUrl="${escapeXmlAttr(source.url)}" />
     `
       )
       .join('')}
   </body>
 </opml>`
-
-    return opml
   } catch (error) {
     logError(error, {
       action: 'exportOPML',
@@ -355,7 +327,6 @@ export async function exportOPML() {
   }
 }
 
-// 导入 OPML (Pro only)
 export async function importOPML(
   opmlContent: string
 ): Promise<{ imported: number; skipped: number }> {
@@ -366,13 +337,11 @@ export async function importOPML(
       throw new AuthError('Please sign in to import RSS sources')
     }
 
-    // 检查 Pro 权限
     const { features } = await getUserTier()
     if (!features.opmlImportExportEnabled) {
       throw new AuthError('OPML import requires Pro subscription')
     }
 
-    // 速率限制
     const rateLimitResult = await rateLimitByAction(session.user.id, 'import-opml', {
       ...RateLimitTiers.STRICT,
     })
@@ -381,53 +350,56 @@ export async function importOPML(
       throw new Error('Too many import attempts. Please try again later.')
     }
 
-    // 解析 OPML
-    const sources = parseOPML(opmlContent)
+    const parsedSources = parseOPML(opmlContent)
 
-    if (sources.length === 0) {
+    if (parsedSources.length === 0) {
       throw new ValidationError('No valid RSS sources found in OPML file')
     }
 
-    // 获取现有源
     const existingSources = await getRSSSources()
-    const existingUrls = new Set(existingSources.map((s) => s.url.toLowerCase()))
-
-    // 限制总数
-    const maxSources = 50
-    const availableSlots = maxSources - existingSources.length
+    const existingUrls = new Set(existingSources.map((source) => source.url.toLowerCase()))
+    const availableSlots = 50 - existingSources.length
 
     if (availableSlots <= 0) {
       throw new ValidationError('Maximum number of RSS sources (50) reached')
     }
 
-    // 过滤重复并限制数量
     const newSources: RSSSource[] = []
     let skipped = 0
 
-    for (const source of sources) {
+    for (const source of parsedSources) {
       if (newSources.length >= availableSlots) {
-        skipped++
+        skipped += 1
         continue
       }
 
-      if (existingUrls.has(source.url.toLowerCase())) {
-        skipped++
-        continue
-      }
+      try {
+        const safeUrl = await validateRssUrl(source.url)
 
-      newSources.push({
-        ...source,
-        id: globalThis.crypto.randomUUID(),
-        order: existingSources.length + newSources.length,
-        failureCount: 0,
-      })
+        if (existingUrls.has(safeUrl.toLowerCase())) {
+          skipped += 1
+          continue
+        }
+
+        newSources.push({
+          ...source,
+          url: safeUrl,
+          id: globalThis.crypto.randomUUID(),
+          order: existingSources.length + newSources.length,
+          failureCount: 0,
+        })
+        existingUrls.add(safeUrl.toLowerCase())
+      } catch {
+        skipped += 1
+      }
     }
 
-    // 保存
-    const allSources = [...existingSources, ...newSources]
-    const key = StorageKeys.userRSSSources(session.user.id)
-    await setStorageItem(key, allSources)
+    await setStorageItem(StorageKeys.userRSSSources(session.user.id), [
+      ...existingSources,
+      ...newSources,
+    ])
 
+    revalidateTag('rss', 'max')
     revalidatePath('/rss')
 
     return {
@@ -442,47 +414,72 @@ export async function importOPML(
   }
 }
 
-// 解析 OPML 内容
 function parseOPML(content: string): Omit<RSSSource, 'id' | 'order' | 'failureCount'>[] {
-  const sources: Omit<RSSSource, 'id' | 'order' | 'failureCount'>[] = []
+  let parsed: unknown
 
-  // 简单的正则解析 outline 元素
-  const outlineRegex = /<outline[^>]*>/gi
-  const matches = content.match(outlineRegex) || []
-
-  for (const match of matches) {
-    // 提取属性
-    const xmlUrl = extractAttribute(match, 'xmlUrl') || extractAttribute(match, 'xmlurl')
-    const text = extractAttribute(match, 'text') || extractAttribute(match, 'title')
-    const type = extractAttribute(match, 'type')
-
-    // 只处理 RSS 类型的 outline
-    if (!xmlUrl || (type && type.toLowerCase() !== 'rss')) {
-      continue
-    }
-
-    // 验证 URL
-    const sanitizedUrl = sanitizeUrl(xmlUrl)
-    if (!sanitizedUrl) {
-      continue
-    }
-
-    sources.push({
-      name: sanitizeString(text || new URL(sanitizedUrl).hostname, { maxLength: 200 }),
-      url: sanitizedUrl,
-      description: '',
-      language: 'zh', // 默认中文
-      enabled: true,
-      tags: [],
+  try {
+    const parser = new XMLParser({
+      ignoreAttributes: false,
+      attributeNamePrefix: '',
+      allowBooleanAttributes: true,
     })
+    parsed = parser.parse(content)
+  } catch {
+    throw new ValidationError('Invalid OPML file')
   }
 
-  return sources
-}
+  const root = (parsed as { opml?: { body?: { outline?: unknown } } })?.opml?.body?.outline
+  if (!root) {
+    return []
+  }
 
-// 提取 XML 属性值
-function extractAttribute(element: string, attrName: string): string | null {
-  const regex = new RegExp(`${attrName}\\s*=\\s*["']([^"']*)["']`, 'i')
-  const match = element.match(regex)
-  return match ? match[1] || null : null
+  const sources: Omit<RSSSource, 'id' | 'order' | 'failureCount'>[] = []
+
+  const visitOutline = (outline: unknown) => {
+    if (!outline || typeof outline !== 'object') {
+      return
+    }
+
+    const record = outline as Record<string, unknown>
+    const xmlUrl =
+      typeof record.xmlUrl === 'string'
+        ? record.xmlUrl
+        : typeof record.xmlurl === 'string'
+          ? record.xmlurl
+          : undefined
+    const type = typeof record.type === 'string' ? record.type : undefined
+
+    if (xmlUrl && (!type || type.toLowerCase() === 'rss')) {
+      try {
+        const normalizedUrl = new URL(xmlUrl.trim()).toString()
+        sources.push({
+          name: sanitizeString(
+            typeof record.text === 'string'
+              ? record.text
+              : typeof record.title === 'string'
+                ? record.title
+                : new URL(normalizedUrl).hostname,
+            { maxLength: 200 }
+          ),
+          url: normalizedUrl,
+          description: '',
+          language: 'zh',
+          enabled: true,
+          tags: [],
+        })
+      } catch {
+        // Ignore malformed outline entries and keep parsing.
+      }
+    }
+
+    if (record.outline) {
+      const children = Array.isArray(record.outline) ? record.outline : [record.outline]
+      children.forEach(visitOutline)
+    }
+  }
+
+  const outlines = Array.isArray(root) ? root : [root]
+  outlines.forEach(visitOutline)
+
+  return sources
 }

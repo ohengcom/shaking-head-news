@@ -1,27 +1,28 @@
 import { Suspense } from 'react'
-import { NewsDisplay } from '@/components/news/NewsDisplay'
+import { AlertCircle } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
-import { getAiNewsItems, getHotListNews, getNews, getUserCustomNews } from '@/lib/actions/news'
-import { HOT_LIST_SOURCES } from '@/lib/api/hot-list'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { AdBanner } from '@/components/ads/AdBanner'
+import { RefreshButton } from '@/components/common/RefreshButton'
+import { NewsDisplay } from '@/components/news/NewsDisplay'
 import { NewsList } from '@/components/news/NewsList'
 import { NewsListSkeleton } from '@/components/news/NewsListSkeleton'
-import { AdBanner } from '@/components/ads/AdBanner'
-import { auth } from '@/lib/auth'
-import { getUserSettings } from '@/lib/actions/settings'
-
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { AlertCircle } from 'lucide-react'
-import { RefreshButton } from '@/components/common/RefreshButton'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { getUserSettings } from '@/lib/actions/settings'
+import { getAiNewsItems, getHotListNews, getNews, getUserCustomNews } from '@/lib/actions/news'
+import { HOT_LIST_SOURCES } from '@/lib/constants/hot-list-sources'
+import { getUserTier } from '@/lib/tier-server'
+import { cn } from '@/lib/utils'
 
-export const revalidate = 3600 // ISR: 每小时重新验证一次
+export const revalidate = 3600
 
 async function SuspendedGuestNews() {
   const [dailyResponse, aiNews] = await Promise.all([
-    getNews('zh').catch(() => ({ items: [], total: 0 })), // Fetch standard daily news explicitly
+    getNews('zh').catch(() => ({ items: [], total: 0 })),
     getAiNewsItems().catch(() => []),
   ])
   const mergedNews = [...dailyResponse.items, ...aiNews]
+
   return <NewsList news={mergedNews} showLoginCTA={true} />
 }
 
@@ -38,6 +39,7 @@ async function SuspendedCustomNews() {
       </Alert>
     )
   }
+
   return <NewsList news={customNews} showLoginCTA={false} />
 }
 
@@ -63,31 +65,29 @@ export default async function HomePage() {
   const t = await getTranslations('home')
   const tNews = await getTranslations('news')
   const tPage = await getTranslations('page')
-  const session = await auth()
-  const settings = session?.user ? await getUserSettings() : null
-  const isPro = settings?.isPro ?? false
-  const isMember = !!session?.user
+  const { tier, features } = await getUserTier()
+  const isMember = tier !== 'guest'
+  const settings = isMember ? await getUserSettings() : null
+  const adsEnabled = !features.adsDisableable || settings?.adsEnabled !== false
 
-  // Ensure these render instantly while data fetches in suspense bounds
   const enabledSourceIds = (settings?.newsSources || [])
     .filter((id) => id !== 'everydaynews')
-    .filter((id) => HOT_LIST_SOURCES.some((s) => s.id === id))
+    .filter((id) => HOT_LIST_SOURCES.some((source) => source.id === id))
 
-  // Guest View: Merge Daily and AI, no tabs, no trending
   if (!isMember) {
     return (
       <div className="container mx-auto py-8">
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[200px_1fr_200px] xl:gap-24">
-          {/* Left Sidebar Ad */}
-          <aside className="sticky top-0 hidden h-screen flex-col justify-center xl:flex">
-            {/* Ad component remains same */}
-            <AdBanner
-              position="sidebar"
-              size="large"
-              className="min-h-[600px] w-full"
-              initialIsPro={false}
-            />
-          </aside>
+        <div
+          className={cn(
+            'grid grid-cols-1 gap-6',
+            adsEnabled && 'xl:grid-cols-[200px_1fr_200px] xl:gap-24'
+          )}
+        >
+          {adsEnabled && (
+            <aside className="sticky top-0 hidden h-screen flex-col justify-center xl:flex">
+              <AdBanner position="sidebar" size="large" className="min-h-[600px] w-full" />
+            </aside>
+          )}
 
           <main className="mx-auto w-full max-w-4xl">
             <div className="mb-6">
@@ -102,53 +102,47 @@ export default async function HomePage() {
             </div>
           </main>
 
-          {/* Right Sidebar Ad */}
-          <aside className="sticky top-0 hidden h-screen flex-col justify-center xl:flex">
-            <AdBanner
-              position="sidebar"
-              size="large"
-              className="min-h-[600px] w-full"
-              initialIsPro={false}
-            />
-          </aside>
+          {adsEnabled && (
+            <aside className="sticky top-0 hidden h-screen flex-col justify-center xl:flex">
+              <AdBanner position="sidebar" size="large" className="min-h-[600px] w-full" />
+            </aside>
+          )}
         </div>
       </div>
     )
   }
 
-  // Member View: Tabs
   return (
     <div className="container mx-auto py-8">
-      {/* 3-column layout: Sidebar (Left) - Main Content - Sidebar (Right) */}
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[200px_1fr_200px] xl:gap-24">
-        {/* Left Sidebar Ad - Vertically Centered */}
-        <aside className="sticky top-0 hidden h-screen flex-col justify-center xl:flex">
-          <AdBanner
-            position="sidebar"
-            size="large"
-            className="min-h-[600px] w-full"
-            initialIsPro={isPro}
-          />
-        </aside>
+      <div
+        className={cn(
+          'grid grid-cols-1 gap-6',
+          adsEnabled && 'xl:grid-cols-[200px_1fr_200px] xl:gap-24'
+        )}
+      >
+        {adsEnabled && (
+          <aside className="sticky top-0 hidden h-screen flex-col justify-center xl:flex">
+            <AdBanner position="sidebar" size="large" className="min-h-[600px] w-full" />
+          </aside>
+        )}
 
-        {/* Main Content */}
         <main className="mx-auto w-full max-w-4xl">
           <div className="mb-6">
             <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
             <p className="text-muted-foreground mt-2">{t('subtitle')}</p>
           </div>
 
-          <Tabs defaultValue={isPro ? 'custom' : 'daily'} className="w-full">
+          <Tabs defaultValue={features.customRssEnabled ? 'custom' : 'daily'} className="w-full">
             <TabsList className="scrollbar-hide mb-6 flex h-auto w-full justify-start overflow-x-auto whitespace-nowrap sm:w-auto">
-              {/* Pro Custom Feed */}
-              {isPro && <TabsTrigger value="custom">{tPage('myFeed')}</TabsTrigger>}
-
+              {features.customRssEnabled && (
+                <TabsTrigger value="custom">{tPage('myFeed')}</TabsTrigger>
+              )}
               <TabsTrigger value="daily">{tNews('daily')}</TabsTrigger>
               <TabsTrigger value="ai">{tNews('ai')}</TabsTrigger>
 
-              {/* Dynamic Tabs */}
               {enabledSourceIds.map((id) => {
-                const source = HOT_LIST_SOURCES.find((s) => s.id === id)
+                const source = HOT_LIST_SOURCES.find((item) => item.id === id)
+
                 return (
                   <TabsTrigger key={id} value={id}>
                     {source?.icon} {source?.name}
@@ -157,12 +151,11 @@ export default async function HomePage() {
               })}
             </TabsList>
 
-            {/* Pro Custom Content */}
-            {isPro && (
+            {features.customRssEnabled && (
               <TabsContent value="custom" className="min-h-[500px] space-y-4">
                 <div className="mb-4 flex items-center justify-between">
                   <h2 className="text-xl font-bold">{tPage('myCustomFeed')}</h2>
-                  <RefreshButton />
+                  <RefreshButton scope="rss" />
                 </div>
                 <Suspense fallback={<NewsListSkeleton />}>
                   <SuspendedCustomNews />
@@ -183,14 +176,14 @@ export default async function HomePage() {
               </Suspense>
             </TabsContent>
 
-            {/* Dynamic Contents */}
             {enabledSourceIds.map((id) => {
-              const sourceName = HOT_LIST_SOURCES.find((s) => s.id === id)?.name || id
+              const sourceName = HOT_LIST_SOURCES.find((item) => item.id === id)?.name || id
+
               return (
                 <TabsContent key={id} value={id} className="min-h-[500px] space-y-4">
                   <div className="mb-4 flex items-center justify-between">
                     <h2 className="text-xl font-bold">{sourceName}</h2>
-                    <RefreshButton />
+                    <RefreshButton scope="hotlist" sourceId={id} />
                   </div>
                   <Suspense fallback={<NewsListSkeleton />}>
                     <SuspendedDynamicNews id={id} sourceName={sourceName} isMember={isMember} />
@@ -201,15 +194,11 @@ export default async function HomePage() {
           </Tabs>
         </main>
 
-        {/* Right Sidebar Ad - Vertically Centered */}
-        <aside className="sticky top-0 hidden h-screen flex-col justify-center xl:flex">
-          <AdBanner
-            position="sidebar"
-            size="large"
-            className="min-h-[600px] w-full"
-            initialIsPro={isPro}
-          />
-        </aside>
+        {adsEnabled && (
+          <aside className="sticky top-0 hidden h-screen flex-col justify-center xl:flex">
+            <AdBanner position="sidebar" size="large" className="min-h-[600px] w-full" />
+          </aside>
+        )}
       </div>
     </div>
   )

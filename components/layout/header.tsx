@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Newspaper, User, Sparkles, Crown } from 'lucide-react'
-import { ThemeToggle } from '@/components/settings/ThemeToggle'
+import { ThemeToggle } from '@/components/theme-toggle'
 import { Button } from '@/components/ui/button'
 import { getTranslations } from 'next-intl/server'
 import { auth } from '@/lib/auth'

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
@@ -12,11 +12,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { useFormStatus } from 'react-dom'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { updateSettings, resetSettings } from '@/lib/actions/settings'
 import { useToast } from '@/hooks/use-toast'
-import { UserSettings } from '@/types/settings'
+import { UserSettings, defaultSettings } from '@/types/settings'
 import { Loader2, RotateCcw, Lock } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { LanguageSelector } from './LanguageSelector'
@@ -25,9 +24,8 @@ import { useRotationStore } from '@/lib/stores/rotation-store'
 import { useTheme } from 'next-themes'
 import { useUserTier } from '@/hooks/use-user-tier'
 import { UpgradePrompt } from '@/components/tier/UpgradePrompt'
-import { DEFAULT_SETTINGS } from '@/lib/config/defaults'
 
-import { HOT_LIST_SOURCES } from '@/lib/api/hot-list'
+import { HOT_LIST_SOURCES } from '@/lib/constants/hot-list-sources'
 import { Reorder, AnimatePresence, motion } from 'framer-motion'
 import { Plus, X, GripVertical, Check } from 'lucide-react'
 
@@ -36,7 +34,7 @@ interface SettingsPanelProps {
 }
 
 /**
- * 锁定设置项组件
+ * é”å®šè®¾ç½®é¡¹ç»„ä»¶
  */
 function LockedSettingItem({
   label,
@@ -68,22 +66,38 @@ function LockedSettingItem({
   )
 }
 
-function SaveButton({ label }: { label: string }) {
-  const { pending } = useFormStatus()
+function SaveButton({
+  label,
+  isPending,
+  disabled,
+}: {
+  label: string
+  isPending: boolean
+  disabled?: boolean
+}) {
   return (
-    <Button type="submit" disabled={pending} className="flex-1">
-      {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+    <Button type="submit" disabled={disabled ?? isPending} className="flex-1">
+      {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
       {label}
     </Button>
   )
 }
 
-function ResetButton({ label, action }: { label: string; action: () => void }) {
-  const { pending } = useFormStatus()
+function ResetButton({
+  label,
+  onClick,
+  isPending,
+  disabled,
+}: {
+  label: string
+  onClick: () => void
+  isPending: boolean
+  disabled?: boolean
+}) {
   return (
-    <Button formAction={action} disabled={pending} variant="outline">
-      {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-      {!pending && <RotateCcw className="mr-2 h-4 w-4" />}
+    <Button type="button" onClick={onClick} disabled={disabled ?? isPending} variant="outline">
+      {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+      {!isPending && <RotateCcw className="mr-2 h-4 w-4" />}
       {label}
     </Button>
   )
@@ -102,20 +116,10 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
     isPaused,
   } = useRotationStore()
   const { setTheme } = useTheme()
-  const { isGuest, isPro, features, togglePro, isTogglingPro } = useUserTier({
-    initialIsPro: initialSettings.isPro ?? false,
-  })
+  const { isGuest, isPro, features } = useUserTier()
 
-  // Local state for client-side settings
-  const [localAdsEnabled, setLocalAdsEnabled] = useState(true)
-
-  // Initialize local settings from localStorage
-  useEffect(() => {
-    const savedAds = localStorage.getItem('adsEnabled')
-    if (savedAds !== null) {
-      setLocalAdsEnabled(savedAds === 'true')
-    }
-  }, [])
+  const [isSaving, setIsSaving] = useState(false)
+  const [isResetting, setIsResetting] = useState(false)
 
   // Sync UI store, rotation store, and theme with settings on mount and when settings change
   useEffect(() => {
@@ -138,10 +142,12 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
   ])
 
   const handleSaveAction = async () => {
+    setIsSaving(true)
     try {
       const result = await updateSettings(settings)
 
-      if (result.success) {
+      if (result.success && result.settings) {
+        setSettings(result.settings)
         toast({
           title: t('saveSuccess'),
           description: t('saveSuccessDescription'),
@@ -159,10 +165,13 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
         description: t('saveErrorDescription'),
         variant: 'destructive',
       })
+    } finally {
+      setIsSaving(false)
     }
   }
 
   const handleResetAction = async () => {
+    setIsResetting(true)
     try {
       const result = await resetSettings()
 
@@ -185,6 +194,8 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
         description: t('saveErrorDescription'),
         variant: 'destructive',
       })
+    } finally {
+      setIsResetting(false)
     }
   }
 
@@ -207,7 +218,7 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
 
   return (
     <div className="space-y-6">
-      {/* 语言和主题设置 */}
+      {/* è¯­è¨€å’Œä¸»é¢˜è®¾ç½® */}
       <Card>
         <CardHeader>
           <CardTitle>{t('theme')}</CardTitle>
@@ -235,7 +246,7 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
             </Select>
           </div>
 
-          {/* 字体大小 - Guest 锁定 */}
+          {/* å­—ä½“å¤§å° - Guest é”å®š */}
           {features.fontSizeAdjustable ? (
             <div className="space-y-2">
               <Label htmlFor="fontSize">{t('fontSize')}</Label>
@@ -266,7 +277,7 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
             />
           )}
 
-          {/* 布局模式 - Guest 锁定 */}
+          {/* å¸ƒå±€æ¨¡å¼ - Guest é”å®š */}
           {features.layoutModeSelectable ? (
             <div className="space-y-2">
               <Label htmlFor="layoutMode">{t('layout')}</Label>
@@ -297,13 +308,13 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
         </CardContent>
       </Card>
 
-      {/* 旋转设置 */}
+      {/* æ—‹è½¬è®¾ç½® */}
       <Card>
         <CardHeader>
           <CardTitle>{t('rotation')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* 旋转模式 - Guest 锁定 */}
+          {/* æ—‹è½¬æ¨¡å¼ - Guest é”å®š */}
           {features.rotationModeSelectable ? (
             <div className="space-y-2">
               <Label htmlFor="rotationMode">{t('rotationMode')}</Label>
@@ -332,7 +343,7 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
             />
           )}
 
-          {/* 旋转间隔 - Guest 锁定 */}
+          {/* æ—‹è½¬é—´éš” - Guest é”å®š */}
           {features.rotationIntervalAdjustable ? (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
@@ -356,7 +367,7 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
             <LockedSettingItem
               label={t('interval')}
               description={t('intervalDescription')}
-              value={`${DEFAULT_SETTINGS.rotationInterval}s`}
+              value={`${defaultSettings.rotationInterval}s`}
               requiredTier="member"
             />
           )}
@@ -381,15 +392,15 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
         </CardContent>
       </Card>
 
-      {/* Guest 用户升级提示 */}
+      {/* Guest ç”¨æˆ·å‡çº§æç¤º */}
       {isGuest && <UpgradePrompt variant="inline" className="my-4" />}
 
-      {/* 新闻内容设置 - 所有会员可见 */}
+      {/* æ–°é—»å†…å®¹è®¾ç½® - æ‰€æœ‰ä¼šå‘˜å¯è§ */}
       {!isGuest && (
         <Card>
           <CardHeader>
-            <CardTitle>新闻内容</CardTitle>
-            <CardDescription>选择您感兴趣的新闻来源</CardDescription>
+            <CardTitle>æ–°é—»å†…å®¹</CardTitle>
+            <CardDescription>é€‰æ‹©æ‚¨æ„Ÿå…´è¶£çš„æ–°é—»æ¥æº</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-6 md:grid-cols-2">
@@ -397,7 +408,7 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
-                    待添加 (
+                    å¾…æ·»åŠ (
                     {HOT_LIST_SOURCES.filter((s) => !settings.newsSources?.includes(s.id)).length})
                   </Label>
                 </div>
@@ -435,7 +446,7 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
                       .length === 0 && (
                       <div className="text-muted-foreground flex h-full flex-col items-center justify-center py-8 text-xs">
                         <Check className="mb-2 h-8 w-8 opacity-20" />
-                        已全部添加
+                        å·²å…¨éƒ¨æ·»åŠ
                       </div>
                     )}
                   </div>
@@ -446,7 +457,7 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label className="text-primary text-xs font-medium tracking-wider uppercase">
-                    已启用 ({settings.newsSources?.length || 0}) - 可拖拽排序
+                    å·²å¯ç”¨ ({settings.newsSources?.length || 0}) - å¯æ‹–æ‹½æŽ’åº
                   </Label>
                 </div>
                 <div className="bg-card min-h-[300px] rounded-lg border p-2">
@@ -497,7 +508,7 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
                     </AnimatePresence>
                     {(settings.newsSources?.length || 0) === 0 && (
                       <div className="text-muted-foreground flex h-full flex-col items-center justify-center py-8 text-xs">
-                        请从左侧添加新闻源
+                        è¯·ä»Žå·¦ä¾§æ·»åŠ æ–°é—»æº
                       </div>
                     )}
                   </Reorder.Group>
@@ -508,97 +519,64 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
         </Card>
       )}
 
-      {/* Pro 解锁按钮（临时测试用） */}
       {!isGuest && (
-        <Card className={isPro ? 'border-purple-500 bg-purple-50 dark:bg-purple-950/20' : ''}>
+        <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              {isPro ? '🎉 Pro 已激活' : '⭐ Pro 功能'}
-            </CardTitle>
+            <CardTitle>{isPro ? tTier('pro') : tTier('member')}</CardTitle>
             <CardDescription>
-              {isPro
-                ? '您已解锁所有 Pro 功能，包括关闭广告、完整统计、健康提醒等'
-                : '解锁 Pro 功能：关闭广告、完整统计、健康提醒、OPML 导入导出等'}
+              {isPro ? tTier('proFeatureDescription') : tTier('memberFeatureDescription')}
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <Button
-              onClick={togglePro}
-              disabled={isTogglingPro}
-              variant={isPro ? 'outline' : 'default'}
-              className={
-                isPro
-                  ? ''
-                  : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600'
-              }
-            >
-              {isTogglingPro && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isPro ? '取消 Pro（测试）' : '一键解锁 Pro（测试）'}
-            </Button>
-          </CardContent>
         </Card>
       )}
 
-      {/* 新闻内容设置 - 所有会员可见 */}
-
-      {/* 自定义 RSS 设置 - Pro 功能 */}
-      {isPro && (
+      {features.customRssEnabled && (
         <Card>
           <CardHeader>
-            <CardTitle>{t('newsSource') || '自定义订阅'}</CardTitle>
+            <CardTitle>{t('newsSource') || 'è‡ªå®šä¹‰è®¢é˜…'}</CardTitle>
             <CardDescription>
-              {t('newsSourceDescription') || '管理您的自定义 RSS 新闻源'}
+              {t('newsSourceDescription') || 'ç®¡ç†æ‚¨çš„è‡ªå®šä¹‰ RSS æ–°é—»æº'}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label>RSS 订阅管理</Label>
-                <p className="text-muted-foreground text-sm">添加或移除自定义 RSS 新闻源</p>
+                <Label>RSS è®¢é˜…ç®¡ç†</Label>
+                <p className="text-muted-foreground text-sm">
+                  æ·»åŠ æˆ–ç§»é™¤è‡ªå®šä¹‰ RSS æ–°é—»æº
+                </p>
               </div>
               <Button variant="outline" asChild>
-                <a href="/rss">管理订阅</a>
+                <a href="/rss">ç®¡ç†è®¢é˜…</a>
               </Button>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* 广告设置 - Pro 功能 */}
-      {isPro && (
+      {features.adsDisableable && (
         <Card>
           <CardHeader>
-            <CardTitle>广告设置</CardTitle>
-            <CardDescription>管理广告显示偏好</CardDescription>
+            <CardTitle>å¹¿å‘Šè®¾ç½®</CardTitle>
+            <CardDescription>ç®¡ç†å¹¿å‘Šæ˜¾ç¤ºåå¥½</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label htmlFor="adsEnabled">显示广告</Label>
-                <p className="text-muted-foreground text-sm">关闭后将不再显示广告</p>
+                <Label htmlFor="adsEnabled">æ˜¾ç¤ºå¹¿å‘Š</Label>
+                <p className="text-muted-foreground text-sm">å…³é—­åŽå°†ä¸å†æ˜¾ç¤ºå¹¿å‘Š</p>
               </div>
               <Switch
                 id="adsEnabled"
-                checked={localAdsEnabled}
-                onCheckedChange={(checked) => {
-                  setLocalAdsEnabled(checked)
-                  localStorage.setItem('adsEnabled', String(checked))
-                  // Dispatch event for immediate UI update
-
-                  window.dispatchEvent(new Event('ads-preference-changed'))
-
-                  toast({
-                    title: t('saveSuccess'),
-                    description: checked ? '广告已开启' : '广告已关闭',
-                  })
-                }}
+                checked={settings.adsEnabled}
+                onCheckedChange={(checked) => updateSetting('adsEnabled', checked)}
               />
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* 健康提醒设置 - Pro 功能 */}
+      {/* å¥åº·æé†’è®¾ç½® - Pro åŠŸèƒ½ */}
       {isPro && (
         <Card>
           <CardHeader>
@@ -606,7 +584,7 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
             <CardDescription>{t('dailyGoalDescription')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* 每日目标 - Pro 功能 */}
+            {/* æ¯æ—¥ç›®æ ‡ - Pro åŠŸèƒ½ */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="dailyGoal">{t('dailyGoal')}</Label>
@@ -626,7 +604,7 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
               <p className="text-muted-foreground text-sm">{t('dailyGoalDescription')}</p>
             </div>
 
-            {/* 健康提醒 - Pro 功能 */}
+            {/* å¥åº·æé†’ - Pro åŠŸèƒ½ */}
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label htmlFor="notificationsEnabled">{t('notifications')}</Label>
@@ -642,11 +620,22 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
         </Card>
       )}
 
-      {/* 操作按钮 - 仅登录用户可保存 */}
+      {/* æ“ä½œæŒ‰é’® - ä»…ç™»å½•ç”¨æˆ·å¯ä¿å­˜ */}
       {!isGuest ? (
-        <form action={handleSaveAction} className="flex gap-4">
-          <SaveButton label="保存" />
-          <ResetButton label="重置" action={handleResetAction} />
+        <form
+          onSubmit={(event) => {
+            event.preventDefault()
+            void handleSaveAction()
+          }}
+          className="flex gap-4"
+        >
+          <SaveButton label="ä¿å­˜" isPending={isSaving} disabled={isSaving || isResetting} />
+          <ResetButton
+            label="é‡ç½®"
+            onClick={handleResetAction}
+            isPending={isResetting}
+            disabled={isSaving || isResetting}
+          />
         </form>
       ) : (
         <div className="border-muted-foreground/30 bg-muted/30 rounded-lg border border-dashed p-4 text-center">

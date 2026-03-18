@@ -34,12 +34,13 @@ Write-Host ""
 
 Write-Host "Step 4: Configure Environment Variables (if needed)" -ForegroundColor White
 Write-Host "  Required:" -ForegroundColor Gray
-Write-Host "    - NEXTAUTH_SECRET" -ForegroundColor Gray
+Write-Host "    - AUTH_SECRET" -ForegroundColor Gray
 Write-Host "    - AUTH_GOOGLE_ID" -ForegroundColor Gray
 Write-Host "    - AUTH_GOOGLE_SECRET" -ForegroundColor Gray
 Write-Host "  Recommended:" -ForegroundColor Gray
 Write-Host "    - UPSTASH_REDIS_REST_URL" -ForegroundColor Gray
 Write-Host "    - UPSTASH_REDIS_REST_TOKEN" -ForegroundColor Gray
+Write-Host "    - PRO_USER_IDS / PRO_USER_EMAILS (optional)" -ForegroundColor Gray
 Write-Host ""
 
 Write-Host "Detailed Test Plan:" -ForegroundColor Yellow

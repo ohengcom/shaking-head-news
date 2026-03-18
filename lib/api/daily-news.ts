@@ -1,3 +1,6 @@
+import { z } from 'zod'
+import { fetchExternalJson } from '@/lib/utils/external-fetch'
+
 export interface DailyNewsItem {
   news: string[]
   tip: string
@@ -5,7 +8,7 @@ export interface DailyNewsItem {
   lunar_date: string
   image: string
   cover: string
-  link: string // url to original article
+  link: string
   updated: string
   day_of_week: string
 }
@@ -19,22 +22,52 @@ export interface AiNewsItem {
   date: string
 }
 
-interface VikiResponse<T> {
-  code: number
-  message: string
-  data: T
-}
-
 const BASE_URL = 'https://60s.viki.moe/v2'
+
+const DailyNewsItemSchema = z.object({
+  news: z.array(z.string()),
+  tip: z.string().catch(''),
+  date: z.string(),
+  lunar_date: z.string().catch(''),
+  image: z.string().catch(''),
+  cover: z.string().catch(''),
+  link: z.string().catch(''),
+  updated: z.string().catch(''),
+  day_of_week: z.string().catch(''),
+})
+
+const DailyNewsResponseSchema = z.object({
+  data: DailyNewsItemSchema,
+})
+
+const AiNewsItemSchema = z.object({
+  title: z.string(),
+  description: z.string().catch(''),
+  pic: z.string().catch(''),
+  link: z.string().catch(''),
+  source: z.string().catch(''),
+  date: z.string().catch(''),
+})
+
+const AiNewsResponseSchema = z.object({
+  data: z.object({
+    news: z.array(AiNewsItemSchema),
+  }),
+})
 
 export async function fetchDailyNews(): Promise<DailyNewsItem | null> {
   try {
-    const res = await fetch(`${BASE_URL}/60s?encoding=json`, {
-      next: { revalidate: 1800 }, // Cache for 30 minutes via native fetch cache
-    })
-    if (!res.ok) throw new Error('Failed to fetch daily news')
-    const json: VikiResponse<DailyNewsItem> = await res.json()
-    return json.data
+    const response = await fetchExternalJson(
+      `${BASE_URL}/60s?encoding=json`,
+      DailyNewsResponseSchema,
+      {
+        context: 'fetchDailyNews',
+        allowedHosts: ['60s.viki.moe'],
+        next: { revalidate: 1800 },
+      }
+    )
+
+    return response.data
   } catch (error) {
     console.error('Error fetching daily news:', error)
     return null
@@ -43,12 +76,13 @@ export async function fetchDailyNews(): Promise<DailyNewsItem | null> {
 
 export async function fetchAiNews(): Promise<AiNewsItem[] | null> {
   try {
-    const res = await fetch(`${BASE_URL}/ai-news`, {
-      next: { revalidate: 1800 }, // Cache for 30 minutes via native fetch cache
+    const response = await fetchExternalJson(`${BASE_URL}/ai-news`, AiNewsResponseSchema, {
+      context: 'fetchAiNews',
+      allowedHosts: ['60s.viki.moe'],
+      next: { revalidate: 1800 },
     })
-    if (!res.ok) throw new Error('Failed to fetch AI news')
-    const json: VikiResponse<{ date: string; news: AiNewsItem[] }> = await res.json()
-    return json.data.news
+
+    return response.data.news
   } catch (error) {
     console.error('Error fetching AI news:', error)
     return null

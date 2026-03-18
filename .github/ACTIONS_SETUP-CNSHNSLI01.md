@@ -85,13 +85,13 @@ Configure these in Vercel Dashboard → Settings → Environment Variables:
 
 ### Production Environment
 
-- [ ] `NEXTAUTH_SECRET` (Generate: `openssl rand -base64 32`)
-- [ ] `NEXTAUTH_URL` (Your production URL)
-- [ ] `GOOGLE_CLIENT_ID` (From Google Cloud Console)
-- [ ] `GOOGLE_CLIENT_SECRET` (From Google Cloud Console)
+- [ ] `AUTH_SECRET` (Generate: `openssl rand -base64 32`)
+- [ ] `AUTH_GOOGLE_ID` (From Google Cloud Console)
+- [ ] `AUTH_GOOGLE_SECRET` (From Google Cloud Console)
 - [ ] `UPSTASH_REDIS_REST_URL` (From Upstash dashboard)
 - [ ] `UPSTASH_REDIS_REST_TOKEN` (From Upstash dashboard)
 - [ ] `NEXT_PUBLIC_APP_URL` (Your app URL)
+- [ ] `PRO_USER_IDS` / `PRO_USER_EMAILS` (Optional server-managed Pro allowlists)
 
 ### Preview Environment
 

@@ -174,15 +174,15 @@ NEXT_PUBLIC_APP_URL=https://your-domain.com
 #### NextAuth.js
 
 ```env
-NEXTAUTH_SECRET=your-secret-key-here
-NEXTAUTH_URL=https://your-domain.com
+AUTH_SECRET=your-secret-key-here
+NEXT_PUBLIC_APP_URL=https://your-domain.com
 ```
 
 #### Google OAuth
 
 ```env
-GOOGLE_CLIENT_ID=your-google-client-id
-GOOGLE_CLIENT_SECRET=your-google-client-secret
+AUTH_GOOGLE_ID=your-google-client-id
+AUTH_GOOGLE_SECRET=your-google-client-secret
 ```
 
 #### Upstash Redis (Vercel Marketplace Storage)
@@ -191,6 +191,8 @@ GOOGLE_CLIENT_SECRET=your-google-client-secret
 UPSTASH_REDIS_REST_URL=your-upstash-redis-rest-url
 UPSTASH_REDIS_REST_TOKEN=your-upstash-redis-rest-token
 ```
+
+> 生产环境必须配置 Upstash Redis，应用不会回退到内存存储。
 
 #### 新闻 API
 

@@ -20,8 +20,8 @@ cp .env.example .env.local
 5. 复制 Client ID 和 Client Secret 到 `.env.local`
 
 ```bash
-GOOGLE_CLIENT_ID=your-google-client-id
-GOOGLE_CLIENT_SECRET=your-google-client-secret
+AUTH_GOOGLE_ID=your-google-client-id
+AUTH_GOOGLE_SECRET=your-google-client-secret
 ```
 
 ### 3. 配置 Microsoft Entra ID (可选)
@@ -79,7 +79,14 @@ openssl rand -base64 32
 将生成的密钥添加到 `.env.local`：
 
 ```bash
-NEXTAUTH_SECRET=your-generated-secret
+AUTH_SECRET=your-generated-secret
+```
+
+可选的服务端 Pro 白名单配置：
+
+```bash
+PRO_USER_IDS=user-id-1,user-id-2
+PRO_USER_EMAILS=alice@example.com,bob@example.com
 ```
 
 ### 6. 配置应用 URL
@@ -88,15 +95,15 @@ NEXTAUTH_SECRET=your-generated-secret
 
 ```bash
 NEXT_PUBLIC_APP_URL=http://localhost:3000
-NEXTAUTH_URL=http://localhost:3000
 ```
 
 生产环境：
 
 ```bash
 NEXT_PUBLIC_APP_URL=https://your-domain.com
-NEXTAUTH_URL=https://your-domain.com
 ```
+
+当前 Auth.js v5 配置会根据请求头自动推断主机地址，因此通常不需要再额外配置 `NEXTAUTH_URL`。
 
 ## 安装依赖
 
@@ -183,12 +190,13 @@ npx tsx scripts/test-redis.ts
 1. 检查 `UPSTASH_REDIS_REST_URL` 和 `UPSTASH_REDIS_REST_TOKEN` 是否正确
 2. 确认 Upstash 数据库状态为 Active
 3. 检查网络连接
+4. 生产环境下必须配置 Redis，不能依赖内存回退
 
 ### NextAuth 错误
 
 **错误：[next-auth][error][NO_SECRET]**
 
-确保设置了 `NEXTAUTH_SECRET` 环境变量。
+确保设置了 `AUTH_SECRET` 环境变量。
 
 ## 部署到 Vercel
 
