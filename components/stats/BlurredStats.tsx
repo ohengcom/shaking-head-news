@@ -54,7 +54,7 @@ function GuestStatsOverlay() {
             <Lock className="text-muted-foreground h-8 w-8" />
           </div>
           <div className="space-y-2">
-            <h3 className="text-lg font-semibold">æŸ¥çœ‹ç»Ÿè®¡æ•°æ®</h3>
+            <h3 className="text-lg font-semibold">查看统计数据</h3>
             <p className="text-muted-foreground max-w-xs text-sm">
               {tTier('loginToUnlockDescription')}
             </p>
@@ -115,7 +115,7 @@ function MemberStatsPreview() {
             </CardHeader>
             <CardContent>
               <div className="bg-muted/30 flex h-[200px] items-center justify-center rounded">
-                <div className="text-muted-foreground">å›¾è¡¨é¢„è§ˆ</div>
+                <div className="text-muted-foreground">图表预览</div>
               </div>
             </CardContent>
           </Card>
@@ -125,10 +125,8 @@ function MemberStatsPreview() {
           <div className="flex flex-col items-center gap-3 p-4 text-center">
             <Lock className="text-muted-foreground h-6 w-6" />
             <div className="space-y-1">
-              <p className="font-medium">å®Œæ•´ç»Ÿè®¡æ•°æ®</p>
-              <p className="text-muted-foreground text-sm">
-                å‡çº§åˆ° Pro æŸ¥çœ‹è¯¦ç»†å›¾è¡¨å’ŒåŽ†å²æ•°æ®
-              </p>
+              <p className="font-medium">完整统计数据</p>
+              <p className="text-muted-foreground text-sm">升级到 Pro 查看详细图表和历史数据</p>
             </div>
             <Button variant="outline" size="sm" asChild>
               <Link href="/features">{tTier('learnMore')}</Link>

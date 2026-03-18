@@ -32,24 +32,24 @@ const notoSansSC = Noto_Sans_SC({
 })
 
 export const metadata: Metadata = {
-  title: 'æ‘‡å¤´çœ‹æ–°é—» - Shaking Head News',
+  title: '摇头看新闻 - Shaking Head News',
   description:
-    'åœ¨æµè§ˆæ–°é—»çš„åŒæ—¶ï¼Œé€šè¿‡é¡µé¢æ—‹è½¬å¸®åŠ©æ‚¨æ”¹å–„é¢ˆæ¤Žå¥åº·ã€‚A modern web app with daily news and neck health features.',
-  keywords: ['news', 'health', 'cervical spondylosis', 'neck exercise', 'æ–°é—»', 'é¢ˆæ¤Žå¥åº·'],
+    '在浏览新闻的同时，通过页面旋转帮助您改善颈椎健康。A modern web app with daily news and neck health features.',
+  keywords: ['news', 'health', 'cervical spondylosis', 'neck exercise', '新闻', '颈椎健康'],
   authors: [{ name: '024812', url: 'https://github.com/024812' }],
   creator: '024812',
   openGraph: {
     type: 'website',
     locale: 'zh_CN',
     url: 'https://shaking-head-news.vercel.app',
-    title: 'æ‘‡å¤´çœ‹æ–°é—»',
-    description: 'åœ¨æµè§ˆæ–°é—»çš„åŒæ—¶ï¼Œé€šè¿‡é¡µé¢æ—‹è½¬å¸®åŠ©æ‚¨æ”¹å–„é¢ˆæ¤Žå¥åº·',
-    siteName: 'æ‘‡å¤´çœ‹æ–°é—»',
+    title: '摇头看新闻',
+    description: '在浏览新闻的同时，通过页面旋转帮助您改善颈椎健康',
+    siteName: '摇头看新闻',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'æ‘‡å¤´çœ‹æ–°é—»',
-    description: 'åœ¨æµè§ˆæ–°é—»çš„åŒæ—¶ï¼Œé€šè¿‡é¡µé¢æ—‹è½¬å¸®åŠ©æ‚¨æ”¹å–„é¢ˆæ¤Žå¥åº·',
+    title: '摇头看新闻',
+    description: '在浏览新闻的同时，通过页面旋转帮助您改善颈椎健康',
   },
 }
 

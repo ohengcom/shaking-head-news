@@ -27,27 +27,27 @@
     "subtitle": "Improve your neck health through page rotation while browsing news",
     "features": {
       "news": {
-        "title": "ðŸ“° Real-time News",
+        "title": "📰 Real-time News",
         "description": "Get the latest news from multiple sources"
       },
       "rotation": {
-        "title": "ðŸ”„ Page Rotation",
+        "title": "🔄 Page Rotation",
         "description": "Automatic page rotation to help exercise your neck"
       },
       "stats": {
-        "title": "ðŸ“Š Health Statistics",
+        "title": "📊 Health Statistics",
         "description": "Track your neck exercise data and build healthy habits"
       },
       "i18n": {
-        "title": "ðŸŒ Multi-language Support",
+        "title": "🌍 Multi-language Support",
         "description": "Support for Chinese and English with automatic news source switching"
       },
       "sync": {
-        "title": "â˜ï¸ Cloud Sync",
+        "title": "☁️ Cloud Sync",
         "description": "Sync your settings and preferences across devices after login"
       },
       "theme": {
-        "title": "ðŸŽ¨ Custom Themes",
+        "title": "🎨 Custom Themes",
         "description": "Support for light and dark themes with customizable font sizes"
       }
     }
@@ -72,7 +72,7 @@
     "languageDescription": "Select interface language",
     "newsSource": "News Sources",
     "newsSourceDescription": "Manage your news sources and RSS subscriptions",
-    "chinese": "ä¸­æ–‡",
+    "chinese": "中文",
     "english": "English",
     "theme": "Theme",
     "themeDescription": "Select interface theme",
@@ -124,7 +124,7 @@
     "averageDuration": "Average Duration",
     "goal": "Goal",
     "goalProgress": "Goal Progress",
-    "goalAchieved": "ðŸŽ‰ Congratulations! Goal Achieved!",
+    "goalAchieved": "🎉 Congratulations! Goal Achieved!",
     "goalAchievedMessage": "You've completed {count} neck exercises today. Keep it up!",
     "keepGoing": "Keep Going!",
     "noData": "No data available",
@@ -216,8 +216,8 @@
     "signOutError": "Sign out failed"
   },
   "footer": {
-    "copyright": "Â© 2026 Shaking Head News. All rights reserved.",
-    "madeWith": "Made with â¤ï¸",
+    "copyright": "© 2026 Shaking Head News. All rights reserved.",
+    "madeWith": "Made with ❤️",
     "version": "Version"
   },
   "about": {

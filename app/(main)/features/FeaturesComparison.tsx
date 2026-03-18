@@ -151,18 +151,16 @@ export function FeaturesComparison({ currentTier }: FeaturesComparisonProps) {
         <div className="bg-muted/30 border-b p-6">
           <h2 className="flex items-center gap-2 text-xl font-semibold">
             <Zap className="text-primary h-5 w-5" />
-            å®Œæ•´åŠŸèƒ½å¯¹æ¯”
+            完整功能对比
           </h2>
-          <p className="text-muted-foreground mt-1 text-sm">
-            è¯¦ç»†äº†è§£æ¯ä¸ªå±‚çº§çš„åŠŸèƒ½å·®å¼‚
-          </p>
+          <p className="text-muted-foreground mt-1 text-sm">详细了解每个层级的功能差异</p>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="bg-muted/20 border-b">
-                <th className="min-w-[200px] p-4 text-left font-semibold">åŠŸèƒ½</th>
+                <th className="min-w-[200px] p-4 text-left font-semibold">功能</th>
                 <th className="min-w-[120px] p-4 text-center">
                   <div className="flex flex-col items-center gap-1">
                     <User className="text-muted-foreground h-5 w-5" />
@@ -222,9 +220,7 @@ export function FeaturesComparison({ currentTier }: FeaturesComparisonProps) {
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
             {currentTier === 'guest' && (
               <>
-                <p className="text-muted-foreground text-sm">
-                  ç«‹å³ç™»å½•ï¼Œå…è´¹è§£é”ä¼šå‘˜åŠŸèƒ½
-                </p>
+                <p className="text-muted-foreground text-sm">立即登录，免费解锁会员功能</p>
                 <Button onClick={() => signIn()} className="gap-2">
                   <Crown className="h-4 w-4" />
                   {t('loginFree')}
@@ -279,7 +275,7 @@ function FeatureValueDisplay({
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full bg-yellow-500/10 px-2.5 py-1 text-yellow-600 dark:text-yellow-500">
         <Eye className="h-3.5 w-3.5" />
-        <span className="text-xs font-medium">é¢„è§ˆ</span>
+        <span className="text-xs font-medium">预览</span>
       </span>
     )
   }
@@ -353,7 +349,7 @@ function PricingCard({
       {isHighlighted && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
           <span className="bg-primary text-primary-foreground rounded-full px-4 py-1 text-xs font-semibold shadow-lg">
-            æŽ¨è
+            推荐
           </span>
         </div>
       )}

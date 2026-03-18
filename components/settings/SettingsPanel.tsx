@@ -34,7 +34,7 @@ interface SettingsPanelProps {
 }
 
 /**
- * é”å®šè®¾ç½®é¡¹ç»„ä»¶
+ * 锁定设置项组件
  */
 function LockedSettingItem({
   label,
@@ -218,7 +218,7 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
 
   return (
     <div className="space-y-6">
-      {/* è¯­è¨€å’Œä¸»é¢˜è®¾ç½® */}
+      {/* 语言和主题设置 */}
       <Card>
         <CardHeader>
           <CardTitle>{t('theme')}</CardTitle>
@@ -246,7 +246,7 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
             </Select>
           </div>
 
-          {/* å­—ä½“å¤§å° - Guest é”å®š */}
+          {/* 字体大小 - Guest 锁定 */}
           {features.fontSizeAdjustable ? (
             <div className="space-y-2">
               <Label htmlFor="fontSize">{t('fontSize')}</Label>
@@ -277,7 +277,7 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
             />
           )}
 
-          {/* å¸ƒå±€æ¨¡å¼ - Guest é”å®š */}
+          {/* 布局模式 - Guest 锁定 */}
           {features.layoutModeSelectable ? (
             <div className="space-y-2">
               <Label htmlFor="layoutMode">{t('layout')}</Label>
@@ -308,13 +308,13 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
         </CardContent>
       </Card>
 
-      {/* æ—‹è½¬è®¾ç½® */}
+      {/* 旋转设置 */}
       <Card>
         <CardHeader>
           <CardTitle>{t('rotation')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* æ—‹è½¬æ¨¡å¼ - Guest é”å®š */}
+          {/* 旋转模式 - Guest 锁定 */}
           {features.rotationModeSelectable ? (
             <div className="space-y-2">
               <Label htmlFor="rotationMode">{t('rotationMode')}</Label>
@@ -343,7 +343,7 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
             />
           )}
 
-          {/* æ—‹è½¬é—´éš” - Guest é”å®š */}
+          {/* 旋转间隔 - Guest 锁定 */}
           {features.rotationIntervalAdjustable ? (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
@@ -392,15 +392,15 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
         </CardContent>
       </Card>
 
-      {/* Guest ç”¨æˆ·å‡çº§æç¤º */}
+      {/* Guest 用户升级提示 */}
       {isGuest && <UpgradePrompt variant="inline" className="my-4" />}
 
-      {/* æ–°é—»å†…å®¹è®¾ç½® - æ‰€æœ‰ä¼šå‘˜å¯è§ */}
+      {/* 新闻内容设置 - 所有会员可见 */}
       {!isGuest && (
         <Card>
           <CardHeader>
-            <CardTitle>æ–°é—»å†…å®¹</CardTitle>
-            <CardDescription>é€‰æ‹©æ‚¨æ„Ÿå…´è¶£çš„æ–°é—»æ¥æº</CardDescription>
+            <CardTitle>新闻内容</CardTitle>
+            <CardDescription>选择您感兴趣的新闻来源</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-6 md:grid-cols-2">
@@ -408,7 +408,7 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
-                    å¾…æ·»åŠ (
+                    待添加 (
                     {HOT_LIST_SOURCES.filter((s) => !settings.newsSources?.includes(s.id)).length})
                   </Label>
                 </div>
@@ -446,7 +446,7 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
                       .length === 0 && (
                       <div className="text-muted-foreground flex h-full flex-col items-center justify-center py-8 text-xs">
                         <Check className="mb-2 h-8 w-8 opacity-20" />
-                        å·²å…¨éƒ¨æ·»åŠ
+                        已全部添加
                       </div>
                     )}
                   </div>
@@ -457,7 +457,7 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label className="text-primary text-xs font-medium tracking-wider uppercase">
-                    å·²å¯ç”¨ ({settings.newsSources?.length || 0}) - å¯æ‹–æ‹½æŽ’åº
+                    已启用 ({settings.newsSources?.length || 0}) - 可拖拽排序
                   </Label>
                 </div>
                 <div className="bg-card min-h-[300px] rounded-lg border p-2">
@@ -508,7 +508,7 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
                     </AnimatePresence>
                     {(settings.newsSources?.length || 0) === 0 && (
                       <div className="text-muted-foreground flex h-full flex-col items-center justify-center py-8 text-xs">
-                        è¯·ä»Žå·¦ä¾§æ·»åŠ æ–°é—»æº
+                        请从左侧添加新闻源
                       </div>
                     )}
                   </Reorder.Group>
@@ -533,21 +533,19 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
       {features.customRssEnabled && (
         <Card>
           <CardHeader>
-            <CardTitle>{t('newsSource') || 'è‡ªå®šä¹‰è®¢é˜…'}</CardTitle>
+            <CardTitle>{t('newsSource') || '自定义订阅'}</CardTitle>
             <CardDescription>
-              {t('newsSourceDescription') || 'ç®¡ç†æ‚¨çš„è‡ªå®šä¹‰ RSS æ–°é—»æº'}
+              {t('newsSourceDescription') || '管理您的自定义 RSS 新闻源'}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label>RSS è®¢é˜…ç®¡ç†</Label>
-                <p className="text-muted-foreground text-sm">
-                  æ·»åŠ æˆ–ç§»é™¤è‡ªå®šä¹‰ RSS æ–°é—»æº
-                </p>
+                <Label>RSS 订阅管理</Label>
+                <p className="text-muted-foreground text-sm">添加或移除自定义 RSS 新闻源</p>
               </div>
               <Button variant="outline" asChild>
-                <a href="/rss">ç®¡ç†è®¢é˜…</a>
+                <a href="/rss">管理订阅</a>
               </Button>
             </div>
           </CardContent>
@@ -557,14 +555,14 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
       {features.adsDisableable && (
         <Card>
           <CardHeader>
-            <CardTitle>å¹¿å‘Šè®¾ç½®</CardTitle>
-            <CardDescription>ç®¡ç†å¹¿å‘Šæ˜¾ç¤ºåå¥½</CardDescription>
+            <CardTitle>广告设置</CardTitle>
+            <CardDescription>管理广告显示偏好</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label htmlFor="adsEnabled">æ˜¾ç¤ºå¹¿å‘Š</Label>
-                <p className="text-muted-foreground text-sm">å…³é—­åŽå°†ä¸å†æ˜¾ç¤ºå¹¿å‘Š</p>
+                <Label htmlFor="adsEnabled">显示广告</Label>
+                <p className="text-muted-foreground text-sm">关闭后将不再显示广告</p>
               </div>
               <Switch
                 id="adsEnabled"
@@ -576,7 +574,7 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
         </Card>
       )}
 
-      {/* å¥åº·æé†’è®¾ç½® - Pro åŠŸèƒ½ */}
+      {/* 健康提醒设置 - Pro 功能 */}
       {isPro && (
         <Card>
           <CardHeader>
@@ -584,7 +582,7 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
             <CardDescription>{t('dailyGoalDescription')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* æ¯æ—¥ç›®æ ‡ - Pro åŠŸèƒ½ */}
+            {/* 每日目标 - Pro 功能 */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="dailyGoal">{t('dailyGoal')}</Label>
@@ -604,7 +602,7 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
               <p className="text-muted-foreground text-sm">{t('dailyGoalDescription')}</p>
             </div>
 
-            {/* å¥åº·æé†’ - Pro åŠŸèƒ½ */}
+            {/* 健康提醒 - Pro 功能 */}
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label htmlFor="notificationsEnabled">{t('notifications')}</Label>
@@ -620,7 +618,7 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
         </Card>
       )}
 
-      {/* æ“ä½œæŒ‰é’® - ä»…ç™»å½•ç”¨æˆ·å¯ä¿å­˜ */}
+      {/* 操作按钮 - 仅登录用户可保存 */}
       {!isGuest ? (
         <form
           onSubmit={(event) => {
@@ -629,9 +627,9 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
           }}
           className="flex gap-4"
         >
-          <SaveButton label="ä¿å­˜" isPending={isSaving} disabled={isSaving || isResetting} />
+          <SaveButton label="保存" isPending={isSaving} disabled={isSaving || isResetting} />
           <ResetButton
-            label="é‡ç½®"
+            label="重置"
             onClick={handleResetAction}
             isPending={isResetting}
             disabled={isSaving || isResetting}

@@ -432,7 +432,7 @@ export async function getHotListNews(sourceId: string, sourceName: string): Prom
     return items.map((item, index) => ({
       id: `hot-${sourceId}-${index}`,
       title: item.title,
-      description: item.hot ? `çƒ­åº¦: ${item.hot}` : undefined,
+      description: item.hot ? `热度: ${item.hot}` : undefined,
       url: item.url,
       source: sourceName,
       publishedAt: new Date().toISOString(),
