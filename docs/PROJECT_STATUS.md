@@ -1,7 +1,7 @@
 # 项目状态总结
 
-**更新时间**: 2025-01-07  
-**项目版本**: 2.0.0  
+**更新时间**: 2026-03-18  
+**项目版本**: 2.4.0  
 **状态**: ✅ 生产运行中 (Node.js 24.x, Next.js 16.1, React 19.2)
 
 ---
@@ -191,10 +191,10 @@ _注: 实际指标需要在部署后通过 Lighthouse 测试_
 
 ```json
 {
-  "next": "16.1.1",
-  "react": "^19.2.3",
-  "react-dom": "^19.2.3",
-  "typescript": "^5.7.3",
+  "next": "16.1.7",
+  "react": "^19.2.4",
+  "react-dom": "^19.2.4",
+  "typescript": "^5.9.3",
   "tailwindcss": "^4.1.18",
   "next-auth": "^5.0.0-beta.25",
   "@upstash/redis": "^1.36.0",
@@ -306,13 +306,13 @@ _注: 实际指标需要在部署后通过 Lighthouse 测试_
 1. **运行生产构建**
 
    ```bash
-   npm run build
+   pnpm run build
    ```
 
 2. **测试生产版本**
 
    ```bash
-   npm start
+   pnpm run start
    ```
 
 3. **验证所有功能**

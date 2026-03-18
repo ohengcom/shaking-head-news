@@ -204,7 +204,7 @@ For complete documentation, see the monitoring setup in `lib/sentry.ts`, `lib/an
 
 1. Check `NEXT_PUBLIC_SENTRY_DSN` is set
 2. Uncomment code in `sentry.*.config.ts` files
-3. Verify Sentry is installed: `npm list @sentry/nextjs`
+3. Verify Sentry is installed: `pnpm list @sentry/nextjs`
 
 ### Analytics Not Tracking
 

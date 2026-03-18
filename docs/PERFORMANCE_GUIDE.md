@@ -7,7 +7,7 @@ Quick reference for developers working with performance optimizations in Shaking
 ### Analyze Bundle Size
 
 ```bash
-npm run build:analyze
+pnpm run build:analyze
 ```
 
 This opens an interactive visualization of your bundle in the browser.
@@ -15,7 +15,7 @@ This opens an interactive visualization of your bundle in the browser.
 ### Check Web Vitals
 
 ```bash
-npm run dev
+pnpm run dev
 ```
 
 Open browser console to see Web Vitals metrics logged in real-time.
@@ -23,8 +23,8 @@ Open browser console to see Web Vitals metrics logged in real-time.
 ### Run Production Build
 
 ```bash
-npm run build
-npm start
+pnpm run build
+pnpm run start
 ```
 
 Test performance with production optimizations enabled.
@@ -95,8 +95,8 @@ useEffect(() => {
 
 ### Before Committing
 
-- [ ] Run `npm run type-check`
-- [ ] Check bundle size with `npm run build:analyze`
+- [ ] Run `pnpm run type-check`
+- [ ] Check bundle size with `pnpm run build:analyze`
 - [ ] Test in development with Web Vitals logging
 - [ ] Verify images use Next.js Image component
 - [ ] Ensure heavy components use dynamic imports
@@ -123,7 +123,7 @@ useEffect(() => {
 
 ### Large Bundle Size
 
-1. Run `npm run build:analyze`
+1. Run `pnpm run build:analyze`
 2. Identify large dependencies
 3. Use dynamic imports for heavy components
 4. Check for duplicate dependencies
@@ -160,7 +160,7 @@ useEffect(() => {
 
 ### Next.js Tools
 
-- **Bundle Analyzer**: `npm run build:analyze`
+- **Bundle Analyzer**: `pnpm run build:analyze`
 - **Build Output**: Shows page sizes and types
 - **DevTools**: React and Next.js specific tools
 

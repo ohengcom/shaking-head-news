@@ -41,7 +41,7 @@
 - **Framework**: Next.js 16 (App Router, Turbopack)
 - **UI**: React 19, Tailwind CSS 4, Shadcn/ui, Framer Motion
 - **Data**: Zustand (State), Upstash Redis (Storage), NextAuth.js v5 (Auth)
-- **Quality**: TypeScript 5.7, ESLint 9, React Compiler
+- **Quality**: TypeScript 5.9, ESLint 10, React Compiler
 
 ## 🚦 快速开始 (Quick Start)
 

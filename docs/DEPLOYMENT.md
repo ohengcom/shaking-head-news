@@ -135,9 +135,9 @@ For Hobby accounts, Vercel automatically routes traffic to the nearest available
 ### 2. Configure Project Settings
 
 1. **Framework Preset**: Next.js (auto-detected)
-2. **Build Command**: `npm run build` (default)
+2. **Build Command**: `pnpm run build` (default)
 3. **Output Directory**: `.next` (default)
-4. **Install Command**: `npm install` (default)
+4. **Install Command**: `pnpm install` (default)
 
 ### 3. Set Environment Variables
 
@@ -215,8 +215,8 @@ Check these endpoints:
 
 ```bash
 # Run locally to identify issues
-npm run type-check
-npm run lint
+pnpm run type-check
+pnpm run lint
 ```
 
 **Issue**: Missing environment variables
@@ -323,7 +323,7 @@ Before going live:
 - **Weekly**: Review Vercel Analytics for traffic patterns
 - **Weekly**: Check Upstash Redis usage and costs
 - **Monthly**: Review and rotate secrets if needed
-- **Monthly**: Update dependencies (`npm outdated`)
+- **Monthly**: Update dependencies (`pnpm outdated`)
 
 ### Scaling Considerations
 

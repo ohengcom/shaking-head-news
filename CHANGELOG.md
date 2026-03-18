@@ -5,6 +5,28 @@ All notable changes to Shaking Head News will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0] - 2026-03-18
+
+### Added
+
+- **Package Manager Standardization**: Migrated project workflows to `pnpm` with lockfile-based installs
+- **Runtime Alignment**: Added Node.js version pinning for local/CI consistency (`24.x`)
+- **Release Metadata**: Prepared first tagged release workflow with updated changelog and docs
+
+### Changed
+
+- **Linting Stack**: Upgraded to `eslint@10` and `@eslint/js@10`
+- **CI Pipeline**: Updated GitHub Actions dependency install and cache strategy for `pnpm`
+- **Docs Commands**: Updated setup/deploy/performance docs from `npm` commands to `pnpm` commands
+- **Tech Stack Docs**: Synced documented versions for Next.js/React/TypeScript/ESLint with current project state
+
+### Fixed
+
+- **Auth Resilience**: Hardened OAuth session fallback when Redis persistence is temporarily unavailable
+- **Tier Gating**: Restored Pro/Member feature boundary and one-click Pro activation flow
+- **Vercel Routing Config**: Removed unstable function globs and moved route runtime controls to App Router exports
+- **Encoding Cleanup**: Fixed UTF-8 content corruption in localization and docs updates
+
 ## [2.2.0] - 2026-01-26
 
 ### Added

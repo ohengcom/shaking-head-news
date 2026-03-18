@@ -1,7 +1,7 @@
 {
   "name": "shaking-head-news",
   "description": "Shake your head while watching the news - A modern web app with daily news and neck health features",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ohengcom/shaking-head-news.git"

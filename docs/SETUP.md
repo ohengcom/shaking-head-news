@@ -108,13 +108,13 @@ NEXT_PUBLIC_APP_URL=https://your-domain.com
 ## 安装依赖
 
 ```bash
-npm install
+pnpm install
 ```
 
 ## 运行开发服务器
 
 ```bash
-npm run dev
+pnpm run dev
 ```
 
 访问 [http://localhost:3000](http://localhost:3000)
@@ -157,7 +157,7 @@ npx tsx scripts/test-redis.ts
 
 ### 测试认证
 
-1. 启动开发服务器：`npm run dev`
+1. 启动开发服务器：`pnpm run dev`
 2. 访问 `http://localhost:3000/login`
 3. 点击 "使用 Google 登录" 或 "使用 Microsoft 登录"
 4. 完成 OAuth 流程

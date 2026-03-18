@@ -4,7 +4,7 @@
 
 **项目名称**: 摇头看新闻 (Shaking Head News)  
 **技术栈**: Next.js 16.1 + React 19.2 + TypeScript  
-**检查日期**: 2025-01-07  
+**检查日期**: 2026-03-18  
 **当前状态**: 生产运行中
 
 ---
@@ -127,7 +127,7 @@ types/.gitkeep
 ### TypeScript 编译
 
 ```bash
-npm run type-check
+pnpm run type-check
 ```
 
 **状态**: ✅ 通过 (无错误)
@@ -135,7 +135,7 @@ npm run type-check
 ### ESLint 检查
 
 ```bash
-npm run lint
+pnpm run lint
 ```
 
 **状态**: ⚠️ 有警告 (非阻塞性)
@@ -146,7 +146,7 @@ npm run lint
 ### 构建测试
 
 ```bash
-npm run build
+pnpm run build
 ```
 
 **状态**: 需要验证
@@ -154,7 +154,7 @@ npm run build
 ### 依赖审计
 
 ```bash
-npm audit
+pnpm audit
 ```
 
 **状态**: 需要检查
@@ -214,10 +214,10 @@ NEWS_API_BASE_URL=https://news.ravelloh.top
 
 ```json
 {
-  "next": "^16.1.1",
-  "react": "^19.2.3",
-  "react-dom": "^19.2.3",
-  "typescript": "^5.7.3"
+  "next": "^16.1.7",
+  "react": "^19.2.4",
+  "react-dom": "^19.2.4",
+  "typescript": "^5.9.3"
 }
 ```
 
@@ -250,9 +250,9 @@ npx depcheck
 
 ```
 Framework Preset: Next.js
-Build Command: npm run build
+Build Command: pnpm run build
 Output Directory: .next
-Install Command: npm install
+Install Command: pnpm install
 ```
 
 #### 2. 环境变量
@@ -515,6 +515,6 @@ Install Command: npm install
 
 ---
 
-**最后更新**: 2025-11-12  
+**最后更新**: 2026-03-18  
 **更新人**: Kiro AI Assistant  
 **版本**: 1.0
