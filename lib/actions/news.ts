@@ -21,6 +21,16 @@ import { fetchExternalJson, fetchExternalText } from '@/lib/utils/external-fetch
 const NEWS_API_BASE_URL = process.env.NEWS_API_BASE_URL || 'https://news.ravelloh.top'
 const DEFAULT_REVALIDATE = 3600
 const RSS_REVALIDATE = 1800
+const NEWS_FETCH_TIMEOUT_MS = 4000
+const RSS_FETCH_TIMEOUT_MS = 4000
+const NEWS_RETRY_OPTIONS = {
+  maxRetries: 1,
+  initialDelay: 250,
+  maxDelay: 250,
+}
+const RSS_RETRY_OPTIONS = {
+  maxRetries: 0,
+}
 
 export async function getNews(
   language: 'zh' | 'en' = 'zh',
@@ -31,15 +41,18 @@ export async function getNews(
     : `${NEWS_API_BASE_URL}/latest.json?lang=${language}`
 
   try {
-    const validatedRawData = await retryWithBackoff(() =>
-      fetchExternalJson(url, RawNewsResponseSchema, {
-        context: 'getNews',
-        next: {
-          revalidate: DEFAULT_REVALIDATE,
-          tags: ['news', `news-${language}`, source ? `news-${source}` : 'news-latest'],
-        },
-        cache: 'force-cache',
-      })
+    const validatedRawData = await retryWithBackoff(
+      () =>
+        fetchExternalJson(url, RawNewsResponseSchema, {
+          context: 'getNews',
+          timeoutMs: NEWS_FETCH_TIMEOUT_MS,
+          next: {
+            revalidate: DEFAULT_REVALIDATE,
+            tags: ['news', `news-${language}`, source ? `news-${source}` : 'news-latest'],
+          },
+          cache: 'force-cache',
+        }),
+      NEWS_RETRY_OPTIONS
     )
 
     const items: NewsItem[] = validatedRawData.content.map((title, index) => ({
@@ -282,18 +295,20 @@ function parseRSSFeed(xml: string, sourceUrl: string): NewsItem[] {
 
 export async function getRSSNews(rssUrl: string): Promise<NewsItem[]> {
   try {
-    const { text, finalUrl } = await retryWithBackoff(() =>
-      fetchExternalText(rssUrl, {
-        context: 'getRSSNews',
-        allowHttp: true,
-        timeoutMs: 10000,
-        maxBytes: 2 * 1024 * 1024,
-        next: {
-          revalidate: RSS_REVALIDATE,
-          tags: ['rss', `rss-${rssUrl}`],
-        },
-        cache: 'force-cache',
-      })
+    const { text, finalUrl } = await retryWithBackoff(
+      () =>
+        fetchExternalText(rssUrl, {
+          context: 'getRSSNews',
+          allowHttp: true,
+          timeoutMs: RSS_FETCH_TIMEOUT_MS,
+          maxBytes: 2 * 1024 * 1024,
+          next: {
+            revalidate: RSS_REVALIDATE,
+            tags: ['rss', `rss-${rssUrl}`],
+          },
+          cache: 'force-cache',
+        }),
+      RSS_RETRY_OPTIONS
     )
 
     const items = parseRSSFeed(text, finalUrl.toString())

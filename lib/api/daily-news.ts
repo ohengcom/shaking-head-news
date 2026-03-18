@@ -62,6 +62,7 @@ export async function fetchDailyNews(): Promise<DailyNewsItem | null> {
       DailyNewsResponseSchema,
       {
         context: 'fetchDailyNews',
+        timeoutMs: 4000,
         allowedHosts: ['60s.viki.moe'],
         next: { revalidate: 1800 },
       }
@@ -78,6 +79,7 @@ export async function fetchAiNews(): Promise<AiNewsItem[] | null> {
   try {
     const response = await fetchExternalJson(`${BASE_URL}/ai-news`, AiNewsResponseSchema, {
       context: 'fetchAiNews',
+      timeoutMs: 4000,
       allowedHosts: ['60s.viki.moe'],
       next: { revalidate: 1800 },
     })

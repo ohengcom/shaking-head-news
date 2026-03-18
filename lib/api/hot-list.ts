@@ -46,6 +46,7 @@ export async function getHotList(sourceId: string): Promise<HotItem[]> {
     if (sourceId === 'today-in-history') {
       const response = await fetchExternalJson(endpoint, TodayInHistoryResponseSchema, {
         context: 'getHotList:today-in-history',
+        timeoutMs: 4000,
         allowedHosts: ['60s.viki.moe'],
         next: { revalidate: 300, tags: ['hotlist', `hotlist-${sourceId}`] },
       })
@@ -59,6 +60,7 @@ export async function getHotList(sourceId: string): Promise<HotItem[]> {
 
     const response = await fetchExternalJson(endpoint, GenericHotListResponseSchema, {
       context: `getHotList:${sourceId}`,
+      timeoutMs: 4000,
       allowedHosts: ['60s.viki.moe'],
       next: { revalidate: 300, tags: ['hotlist', `hotlist-${sourceId}`] },
     })

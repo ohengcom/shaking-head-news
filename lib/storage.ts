@@ -3,6 +3,7 @@ import { Redis } from '@upstash/redis'
 // 检查环境变量
 const redisUrl = process.env.UPSTASH_REDIS_REST_URL
 const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN
+const STORAGE_REQUEST_TIMEOUT_MS = 1500
 
 const isRedisConfigured = !!(redisUrl && redisToken)
 
@@ -24,6 +25,8 @@ export const storage = isRedisConfigured
   ? new Redis({
       url: redisUrl,
       token: redisToken,
+      retry: false,
+      signal: () => AbortSignal.timeout(STORAGE_REQUEST_TIMEOUT_MS),
     })
   : null
 

@@ -30,6 +30,7 @@ export async function fetchTrending(source: string = 'douyin'): Promise<Trending
     const endpoint = `${BASE_URL}/${source}`
     const response = await fetchExternalJson(endpoint, TrendingResponseSchema, {
       context: 'fetchTrending',
+      timeoutMs: 4000,
       allowedHosts: ['60s.viki.moe'],
       next: { revalidate: 60 },
     })
