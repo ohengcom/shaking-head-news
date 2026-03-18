@@ -45,11 +45,15 @@
 
 ## 🚦 快速开始 (Quick Start)
 
+> Requires `Node.js 24.x` and `pnpm 10.x` (managed via `corepack`).
+
 **1. 克隆与安装**
 
 ```bash
 git clone https://github.com/ohengcom/shaking-head-news.git
-npm install
+cd shaking-head-news
+corepack enable
+pnpm install
 ```
 
 **2. 环境配置**
@@ -59,7 +63,7 @@ npm install
 **3. 启动开发**
 
 ```bash
-npm run dev
+pnpm run dev
 # 访问 http://localhost:3000
 ```
 

@@ -15,7 +15,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NODE_VERSION: '22'
+  NODE_VERSION: '24'
 
 jobs:
   lint:
@@ -28,20 +28,25 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
+          cache: pnpm
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Run ESLint
-        run: npm run lint
+        run: pnpm run lint
 
       - name: Check code formatting
-        run: npm run format:check
+        run: pnpm run format:check
 
   type-check:
     name: TypeScript Type Check
@@ -51,17 +56,22 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
+          cache: pnpm
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Run type check
-        run: npm run type-check
+        run: pnpm run type-check
 
   e2e:
     name: E2E Tests (Playwright)
@@ -72,20 +82,25 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
+          cache: pnpm
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+        run: pnpm exec playwright install --with-deps chromium
 
       - name: Run E2E tests
-        run: npm run test:e2e
+        run: pnpm run test:e2e
         env:
           AUTH_SECRET: test-secret
           AUTH_GOOGLE_ID: test-client-id
@@ -108,17 +123,22 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
+          cache: pnpm
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Build application
-        run: npm run build
+        run: pnpm run build
         env:
           AUTH_SECRET: build-secret
           AUTH_GOOGLE_ID: build-client-id
@@ -142,17 +162,22 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
+          cache: pnpm
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
-      - name: Run npm audit
-        run: npm audit --omit=dev --audit-level=moderate
+      - name: Run pnpm audit
+        run: pnpm audit --prod --audit-level=moderate
         continue-on-error: true
 
   deploy-production:
