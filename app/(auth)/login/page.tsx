@@ -1,6 +1,8 @@
 import { signIn } from '@/lib/auth'
 import Link from 'next/link'
 
+export const maxDuration = 10
+
 function getLoginErrorMessage(error?: string) {
   switch (error) {
     case 'CallbackRouteError':

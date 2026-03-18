@@ -1,6 +1,8 @@
 import { getTranslations } from 'next-intl/server'
 import type { Metadata } from 'next'
 
+export const maxDuration = 10
+
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('about')
   return {

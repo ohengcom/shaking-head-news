@@ -3,6 +3,8 @@ import { SettingsPanel } from '@/components/settings/SettingsPanel'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 
+export const maxDuration = 10
+
 export const metadata = {
   title: '设置 - 摇头看新闻',
   description: '自定义您的阅读体验和偏好设置',

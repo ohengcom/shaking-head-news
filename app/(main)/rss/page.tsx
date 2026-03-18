@@ -12,6 +12,8 @@ import { TierFeatureServer } from '@/components/tier/TierFeatureServer'
 import { Badge } from '@/components/ui/badge'
 import { Sparkles } from 'lucide-react'
 
+export const maxDuration = 10
+
 async function RSSContent() {
   const { tier, features } = await getUserTier()
   const t = await getTranslations('rss')

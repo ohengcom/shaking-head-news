@@ -14,6 +14,7 @@ import { HOT_LIST_SOURCES } from '@/lib/constants/hot-list-sources'
 import { getUserTier } from '@/lib/tier-server'
 import { cn } from '@/lib/utils'
 
+export const maxDuration = 10
 export const revalidate = 3600
 
 async function SuspendedGuestNews() {
