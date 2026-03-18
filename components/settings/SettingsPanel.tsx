@@ -16,7 +16,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { updateSettings, resetSettings } from '@/lib/actions/settings'
 import { useToast } from '@/hooks/use-toast'
 import { UserSettings, defaultSettings } from '@/types/settings'
-import { Loader2, RotateCcw, Lock } from 'lucide-react'
+import { Loader2, RotateCcw, Lock, Sparkles } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { LanguageSelector } from './LanguageSelector'
 import { useUIStore } from '@/lib/stores/ui-store'
@@ -108,6 +108,7 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
   const { toast } = useToast()
   const t = useTranslations('settings')
   const tTier = useTranslations('tier')
+  const tFeatures = useTranslations('features')
   const { setFontSize, setLayoutMode } = useUIStore()
   const {
     setMode: setRotationMode,
@@ -116,7 +117,7 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
     isPaused,
   } = useRotationStore()
   const { setTheme } = useTheme()
-  const { isGuest, isPro, features } = useUserTier()
+  const { isGuest, isPro, features, togglePro, isTogglingPro } = useUserTier()
 
   const [isSaving, setIsSaving] = useState(false)
   const [isResetting, setIsResetting] = useState(false)
@@ -524,13 +525,45 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
           <CardHeader>
             <CardTitle>{isPro ? tTier('pro') : tTier('member')}</CardTitle>
             <CardDescription>
-              {isPro ? tTier('proFeatureDescription') : tTier('memberFeatureDescription')}
+              {isPro ? tFeatures('proCurrentMessage') : tFeatures('memberCurrentMessage')}
             </CardDescription>
           </CardHeader>
         </Card>
       )}
 
-      {features.customRssEnabled && (
+      {!isGuest && (
+        <Card className={isPro ? 'border-amber-500/40 bg-amber-50/40 dark:bg-amber-950/10' : ''}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-amber-500" />
+              {isPro ? 'Pro 已激活' : 'Pro 功能'}
+            </CardTitle>
+            <CardDescription>
+              {isPro
+                ? tFeatures('proCurrentMessage')
+                : '一键激活 Pro，解锁自定义 RSS、完整统计、健康提醒和去广告等能力。'}
+            </CardDescription>
+          </CardHeader>
+          {!isPro && (
+            <CardContent>
+              <Button
+                onClick={togglePro}
+                disabled={isTogglingPro}
+                className="bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600"
+              >
+                {isTogglingPro ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="mr-2 h-4 w-4" />
+                )}
+                {tFeatures('oneClickActivateButton')}
+              </Button>
+            </CardContent>
+          )}
+        </Card>
+      )}
+
+      {!isGuest && (
         <Card>
           <CardHeader>
             <CardTitle>{t('newsSource') || '自定义订阅'}</CardTitle>
@@ -539,15 +572,33 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>RSS 订阅管理</Label>
-                <p className="text-muted-foreground text-sm">添加或移除自定义 RSS 新闻源</p>
+            {features.customRssEnabled ? (
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>RSS 订阅管理</Label>
+                  <p className="text-muted-foreground text-sm">添加或移除自定义 RSS 新闻源</p>
+                </div>
+                <Button variant="outline" asChild>
+                  <a href="/rss">管理订阅</a>
+                </Button>
               </div>
-              <Button variant="outline" asChild>
-                <a href="/rss">管理订阅</a>
-              </Button>
-            </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between opacity-60">
+                  <div className="space-y-0.5">
+                    <Label className="flex items-center gap-2">
+                      RSS 订阅管理
+                      <Lock className="text-muted-foreground h-3 w-3" />
+                    </Label>
+                    <p className="text-muted-foreground text-sm">添加或移除自定义 RSS 新闻源</p>
+                  </div>
+                  <Button variant="outline" disabled>
+                    管理订阅
+                  </Button>
+                </div>
+                <p className="text-muted-foreground text-xs">{tTier('upgradeToUnlock')}</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}

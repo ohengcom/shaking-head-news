@@ -53,6 +53,14 @@ const DEFAULT_RSS_SOURCES: RSSSource[] = [
   },
 ]
 
+async function requireCustomRssAccess() {
+  const { features } = await getUserTier()
+
+  if (!features.customRssEnabled) {
+    throw new AuthError('Custom RSS requires Pro subscription')
+  }
+}
+
 async function validateRssUrl(url: string): Promise<string> {
   const safeUrl = await assertSafeExternalUrl(url, { allowHttp: true })
 
@@ -80,6 +88,11 @@ export async function getRSSSources(): Promise<RSSSource[]> {
       return []
     }
 
+    const { features } = await getUserTier()
+    if (!features.customRssEnabled) {
+      return []
+    }
+
     const key = StorageKeys.userRSSSources(session.user.id)
     const sources = (await getStorageItem<unknown[]>(key)) || []
 
@@ -99,6 +112,8 @@ export async function addRSSSource(source: Omit<RSSSource, 'id' | 'order' | 'fai
     if (!session?.user?.id) {
       throw new AuthError('Please sign in to add RSS sources')
     }
+
+    await requireCustomRssAccess()
 
     const rateLimitResult = await rateLimitByAction(session.user.id, 'add-rss', {
       ...RateLimitTiers.STRICT,
@@ -164,6 +179,8 @@ export async function updateRSSSource(id: string, updates: Partial<RSSSource>) {
       throw new AuthError('Please sign in to update RSS sources')
     }
 
+    await requireCustomRssAccess()
+
     const rateLimitResult = await rateLimitByAction(session.user.id, 'update-rss', {
       limit: 200,
       window: 60,
@@ -226,6 +243,8 @@ export async function deleteRSSSource(id: string) {
       throw new AuthError('Please sign in to delete RSS sources')
     }
 
+    await requireCustomRssAccess()
+
     const sources = await getRSSSources()
     const sourceToDelete = sources.find((source) => source.id === id)
 
@@ -255,6 +274,8 @@ export async function reorderRSSSources(sourceIds: string[]) {
     if (!session?.user?.id) {
       throw new AuthError('Please sign in to reorder RSS sources')
     }
+
+    await requireCustomRssAccess()
 
     const sources = await getRSSSources()
     const reordered = sourceIds.map((id, index) => {
@@ -294,6 +315,8 @@ export async function exportOPML() {
     if (!session?.user?.id) {
       throw new AuthError('Please sign in to export RSS sources')
     }
+
+    await requireCustomRssAccess()
 
     const sources = await getRSSSources()
 
@@ -336,6 +359,8 @@ export async function importOPML(
     if (!session?.user?.id) {
       throw new AuthError('Please sign in to import RSS sources')
     }
+
+    await requireCustomRssAccess()
 
     const { features } = await getUserTier()
     if (!features.opmlImportExportEnabled) {

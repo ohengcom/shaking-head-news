@@ -10,7 +10,6 @@ import { getUserTier } from '@/lib/tier-server'
 import { LockedFeature } from '@/components/tier/LockedFeature'
 import { TierFeatureServer } from '@/components/tier/TierFeatureServer'
 import { Badge } from '@/components/ui/badge'
-import { Sparkles } from 'lucide-react'
 
 export const maxDuration = 10
 
@@ -20,10 +19,9 @@ async function RSSContent() {
   const tTier = await getTranslations('tier')
 
   const isGuest = tier === 'guest'
-  const isPro = tier === 'pro'
 
-  // Guest 用户显示默认源（只读）
-  if (isGuest) {
+  // 非 Pro 用户显示默认源（只读）
+  if (!features.customRssEnabled) {
     const defaultSources = await getDefaultRSSSources()
     return (
       <div className="space-y-6">
@@ -37,8 +35,8 @@ async function RSSContent() {
         {/* 登录提示 */}
         <LockedFeature
           featureName="customRssEnabled"
-          requiredTier="member"
-          description={tTier('loginToUnlockDescription')}
+          requiredTier={isGuest ? 'member' : 'pro'}
+          description={isGuest ? tTier('loginToUnlockDescription') : tTier('proFeatureDescription')}
         />
 
         {/* 默认源列表（只读） */}
@@ -64,7 +62,7 @@ async function RSSContent() {
     )
   }
 
-  // Member/Pro 用户可以管理自定义源
+  // Pro 用户可以管理自定义源
   const sources = await getRSSSources()
 
   return (
@@ -75,19 +73,10 @@ async function RSSContent() {
           <p className="text-muted-foreground">{t('addSourceDescription')}</p>
         </div>
         <div className="flex gap-2">
-          {/* OPML 功能仅 Pro 可用 */}
           <TierFeatureServer feature="opmlImportExportEnabled">
             <ImportOPMLButton />
             <ExportOPMLButton />
           </TierFeatureServer>
-
-          {/* Pro 提示 */}
-          {!isPro && features.customRssEnabled && (
-            <Badge variant="outline" className="text-muted-foreground gap-1">
-              <Sparkles className="h-3 w-3" />
-              OPML 需要 Pro
-            </Badge>
-          )}
 
           <AddRSSSourceDialog />
         </div>

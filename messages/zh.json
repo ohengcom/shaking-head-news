@@ -355,8 +355,8 @@
         "03": "去广告"
       }
     },
-    "oneClickActivateButton": "服务端开通",
-    "loginToActivateLink": "登录后可查看是否具有 Pro 权限",
+    "oneClickActivateButton": "一键激活",
+    "loginToActivateLink": "登录后可激活 Pro",
     "proAccessManaged": "服务端授权",
     "serverManaged": "由服务端管理",
     "memberCurrentMessage": "您当前为会员，已解锁云同步和高级控制。",

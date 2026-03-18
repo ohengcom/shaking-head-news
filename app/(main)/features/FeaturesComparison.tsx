@@ -2,10 +2,11 @@
 
 import { useTranslations } from 'next-intl'
 import { signIn, useSession } from 'next-auth/react'
-import { Check, X, Eye, Sparkles, Crown, User, Zap } from 'lucide-react'
+import { Check, X, Eye, Sparkles, Crown, User, Zap, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { UserTier } from '@/lib/config/features'
 import { cn } from '@/lib/utils'
+import { useUserTier } from '@/hooks/use-user-tier'
 
 interface FeaturesComparisonProps {
   currentTier: UserTier
@@ -23,6 +24,7 @@ interface Feature {
 export function FeaturesComparison({ currentTier }: FeaturesComparisonProps) {
   const t = useTranslations('features')
   const { data: session } = useSession()
+  const { togglePro, isTogglingPro } = useUserTier()
 
   const features: Feature[] = [
     { key: 'instantUse', guest: 'included', member: 'not-included', pro: 'not-included' },
@@ -144,6 +146,8 @@ export function FeaturesComparison({ currentTier }: FeaturesComparisonProps) {
           benefits={proBenefits}
           t={t}
           isAuthenticated={!!session}
+          onAction={session ? togglePro : undefined}
+          isLoading={isTogglingPro}
         />
       </div>
 
@@ -323,6 +327,7 @@ function PricingCard({
   t,
   onAction,
   isAuthenticated,
+  isLoading,
 }: {
   icon: React.ReactNode
   title: string
@@ -335,6 +340,7 @@ function PricingCard({
   t: ReturnType<typeof useTranslations<'features'>>
   onAction?: () => void
   isAuthenticated?: boolean
+  isLoading?: boolean
 }) {
   return (
     <div
@@ -357,7 +363,7 @@ function PricingCard({
       {isPro && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
           <span className="rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-1 text-xs font-semibold text-white shadow-lg">
-            {t('proAccessManaged')}
+            {t('oneClickActivate')}
           </span>
         </div>
       )}
@@ -402,12 +408,16 @@ function PricingCard({
       ) : isPro ? (
         isAuthenticated ? (
           <Button
-            variant="outline"
-            className="w-full border-amber-500/30 text-amber-600 hover:bg-amber-500/5 dark:text-amber-400"
-            disabled
+            className="w-full border-none bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg transition-all duration-300 hover:from-amber-600 hover:to-orange-600 hover:shadow-xl"
+            onClick={onAction}
+            disabled={isLoading}
           >
-            <Sparkles className="mr-2 h-4 w-4" />
-            {t('serverManaged')}
+            {isLoading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Sparkles className="mr-2 h-4 w-4" />
+            )}
+            {t('oneClickActivateButton')}
           </Button>
         ) : (
           <div className="text-center">

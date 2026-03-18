@@ -285,7 +285,7 @@
     "proDescription": "All premium features",
     "currentPlan": "Current Plan",
     "loginFree": "Login Free",
-    "oneClickActivate": "Managed Access",
+    "oneClickActivate": "One-click Activate",
     "loginToActivate": "Login to Activate",
     "comingSoon": "Coming Soon",
     "included": "Included",
@@ -355,8 +355,8 @@
         "03": "Ad-free reading"
       }
     },
-    "oneClickActivateButton": "Managed by Server",
-    "loginToActivateLink": "Sign in to see whether Pro access is available",
+    "oneClickActivateButton": "Activate Pro",
+    "loginToActivateLink": "Sign in to activate Pro",
     "proAccessManaged": "Server Managed",
     "serverManaged": "Server-managed access",
     "memberCurrentMessage": "You are on Member with cloud sync and advanced controls enabled.",

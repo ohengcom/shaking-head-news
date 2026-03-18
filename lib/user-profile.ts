@@ -204,3 +204,42 @@ export async function ensureInternalUserProfile(
 
   return profile
 }
+
+export async function setSubscriptionTierForUser({
+  userId,
+  tier,
+  email,
+  name,
+  image,
+}: {
+  userId: string
+  tier: SubscriptionTier
+  email?: string | null
+  name?: string | null
+  image?: string | null
+}): Promise<UserProfile> {
+  const existingProfile = await getStorageItem<UserProfile>(StorageKeys.userProfile(userId))
+  const normalizedEmail = normalizeEmail(email)
+  const now = new Date().toISOString()
+
+  const profile: UserProfile = {
+    id: userId,
+    email: normalizedEmail ?? existingProfile?.email ?? null,
+    name: name ?? existingProfile?.name ?? null,
+    image: image ?? existingProfile?.image ?? null,
+    subscriptionTier: tier,
+    accounts: existingProfile?.accounts ?? [],
+    createdAt: existingProfile?.createdAt ?? now,
+    updatedAt: now,
+  }
+
+  await setStorageItem(StorageKeys.userProfile(userId), profile)
+
+  if (profile.email) {
+    await setStorageItem(StorageKeys.authEmail(profile.email), userId)
+  }
+
+  await ensureDefaultSettings(userId)
+
+  return profile
+}

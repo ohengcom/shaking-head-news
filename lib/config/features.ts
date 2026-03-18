@@ -56,7 +56,7 @@ export const GUEST_FEATURES: FeatureConfig = {
 
 /**
  * 会员功能配置
- * 免费登录，解锁自定义功能
+ * 免费登录，解锁高级控制和云同步
  */
 export const MEMBER_FEATURES: FeatureConfig = {
   rotationModeSelectable: true,
@@ -64,7 +64,7 @@ export const MEMBER_FEATURES: FeatureConfig = {
   rotationAngleAdjustable: true,
   fontSizeAdjustable: true,
   layoutModeSelectable: true,
-  customRssEnabled: true,
+  customRssEnabled: false,
   opmlImportExportEnabled: false,
   adsDisableable: false,
   statsPreviewEnabled: true,
