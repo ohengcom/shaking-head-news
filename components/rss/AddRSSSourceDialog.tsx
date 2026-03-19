@@ -147,9 +147,10 @@ export function AddRSSSourceDialog() {
                 type="url"
                 value={formData.url}
                 onChange={(e) => setFormData({ ...formData, url: e.target.value })}
-                placeholder="https://example.com/feed.xml"
+                placeholder="https://example.com or https://example.com/feed.xml"
                 required
               />
+              <p className="text-muted-foreground text-xs">{t('sourceUrlHint')}</p>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="description">{t('sourceDescription')}</Label>

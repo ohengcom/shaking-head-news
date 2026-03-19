@@ -95,10 +95,13 @@ function extractFeedTitle(xml: string): string | null {
   }
 }
 
-async function validateRssUrl(url: string): Promise<{ url: string; title: string | null }> {
+async function tryResolveFeedCandidate(
+  url: string,
+  context: string
+): Promise<{ url: string; title: string | null } | null> {
   const safeUrl = await assertSafeExternalUrl(url, { allowHttp: true })
   const { text, finalUrl } = await fetchExternalText(safeUrl.toString(), {
-    context: 'validateRssUrl',
+    context,
     allowHttp: true,
     timeoutMs: 5000,
     maxBytes: 256 * 1024,
@@ -110,13 +113,132 @@ async function validateRssUrl(url: string): Promise<{ url: string; title: string
 
   const title = extractFeedTitle(text)
   if (!title) {
-    throw new ValidationError('URL is reachable, but it is not a valid RSS or Atom feed')
+    return null
   }
 
   return {
     url: finalUrl.toString(),
     title,
   }
+}
+
+function extractFeedLinksFromHtml(html: string, baseUrl: URL): string[] {
+  const linkTags = html.match(/<link\b[^>]*>/gi) || []
+  const urls = new Set<string>()
+
+  for (const tag of linkTags) {
+    const attributes: Record<string, string> = {}
+    const attributePattern = /([a-zA-Z_:][-a-zA-Z0-9_:.]*)\s*=\s*("([^"]*)"|'([^']*)')/g
+    let match: RegExpExecArray | null
+
+    while ((match = attributePattern.exec(tag)) !== null) {
+      const name = match[1]?.toLowerCase()
+      const value = match[3] ?? match[4] ?? ''
+
+      if (name) {
+        attributes[name] = value
+      }
+    }
+
+    const rel = attributes.rel?.toLowerCase() || ''
+    const type = attributes.type?.toLowerCase() || ''
+    const href = attributes.href
+
+    if (!href || !rel.split(/\s+/).includes('alternate')) {
+      continue
+    }
+
+    if (
+      !type.includes('rss+xml') &&
+      !type.includes('atom+xml') &&
+      type !== 'application/xml' &&
+      type !== 'text/xml'
+    ) {
+      continue
+    }
+
+    try {
+      urls.add(new URL(href, baseUrl).toString())
+    } catch {
+      // Ignore malformed discovery links and continue searching.
+    }
+  }
+
+  return [...urls]
+}
+
+function buildCommonFeedCandidates(baseUrl: URL): string[] {
+  const candidates = [
+    new URL('feed', baseUrl).toString(),
+    new URL('feed/', baseUrl).toString(),
+    new URL('rss', baseUrl).toString(),
+    new URL('rss/', baseUrl).toString(),
+    new URL('rss.xml', baseUrl).toString(),
+    new URL('feed.xml', baseUrl).toString(),
+    new URL('atom.xml', baseUrl).toString(),
+    new URL('index.xml', baseUrl).toString(),
+    `${baseUrl.origin}/feed`,
+    `${baseUrl.origin}/feed/`,
+    `${baseUrl.origin}/rss`,
+    `${baseUrl.origin}/rss/`,
+    `${baseUrl.origin}/rss.xml`,
+    `${baseUrl.origin}/feed.xml`,
+    `${baseUrl.origin}/atom.xml`,
+    `${baseUrl.origin}/index.xml`,
+    `${baseUrl.origin}/?feed=rss2`,
+    `${baseUrl.origin}/?feed=atom`,
+  ]
+
+  return [...new Set(candidates)]
+}
+
+async function validateRssUrl(url: string): Promise<{ url: string; title: string | null }> {
+  const directFeed = await tryResolveFeedCandidate(url, 'validateRssUrl:direct').catch(() => null)
+
+  if (directFeed) {
+    return directFeed
+  }
+
+  const safeUrl = await assertSafeExternalUrl(url, { allowHttp: true })
+  const { text, finalUrl } = await fetchExternalText(safeUrl.toString(), {
+    context: 'validateRssUrl',
+    allowHttp: true,
+    timeoutMs: 5000,
+    maxBytes: 512 * 1024,
+    cache: 'no-store',
+    headers: {
+      'User-Agent': 'ShakingHeadNews/1.0',
+    },
+  })
+
+  const finalPageUrl = new URL(finalUrl.toString())
+  const discoveredCandidates = [
+    ...extractFeedLinksFromHtml(text, finalPageUrl),
+    ...buildCommonFeedCandidates(finalPageUrl),
+  ]
+
+  const checkedCandidates = new Set<string>([finalPageUrl.toString().toLowerCase()])
+
+  for (const candidate of discoveredCandidates) {
+    const normalizedCandidate = candidate.toLowerCase()
+
+    if (checkedCandidates.has(normalizedCandidate)) {
+      continue
+    }
+
+    checkedCandidates.add(normalizedCandidate)
+
+    try {
+      const resolvedFeed = await tryResolveFeedCandidate(candidate, 'validateRssUrl:discover')
+      if (resolvedFeed) {
+        return resolvedFeed
+      }
+    } catch {
+      // Keep trying the next discovered candidate.
+    }
+  }
+
+  throw new ValidationError('Could not find a valid RSS or Atom feed for this site')
 }
 
 export async function getDefaultRSSSources(): Promise<RSSSource[]> {

@@ -169,6 +169,7 @@
     "sourceNamePlaceholder": "e.g., Tech News",
     "sourceNameHint": "Optional. Leave blank to use the feed title automatically",
     "sourceUrl": "Source URL",
+    "sourceUrlHint": "You can paste a site homepage and the app will try to discover its RSS/Atom feed automatically",
     "sourceDescription": "Source Description",
     "sourceDescriptionPlaceholder": "Brief description of this RSS feed",
     "sourceLanguage": "Source Language",

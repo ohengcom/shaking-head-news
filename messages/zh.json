@@ -169,6 +169,7 @@
     "sourceNamePlaceholder": "例如：科技新闻",
     "sourceNameHint": "可留空，系统会自动读取订阅标题",
     "sourceUrl": "源地址",
+    "sourceUrlHint": "支持直接填写站点主页，系统会自动发现 RSS/Atom 订阅地址",
     "sourceDescription": "源描述",
     "sourceDescriptionPlaceholder": "简要描述这个 RSS 源的内容",
     "sourceLanguage": "源语言",
