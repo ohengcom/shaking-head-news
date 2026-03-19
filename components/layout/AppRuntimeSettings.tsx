@@ -1,7 +1,6 @@
 'use client'
 
 import { useLayoutEffect } from 'react'
-import { useTheme } from 'next-themes'
 import type { UserSettings } from '@/types/settings'
 import { useRotationStore } from '@/lib/stores/rotation-store'
 import { useUIStore } from '@/lib/stores/ui-store'
@@ -11,8 +10,6 @@ interface AppRuntimeSettingsProps {
 }
 
 export function AppRuntimeSettings({ initialSettings }: AppRuntimeSettingsProps) {
-  const { setTheme } = useTheme()
-
   useLayoutEffect(() => {
     if (initialSettings?.userId) {
       useUIStore.setState({
@@ -26,14 +23,12 @@ export function AppRuntimeSettings({ initialSettings }: AppRuntimeSettingsProps)
         mode: initialSettings.rotationMode,
         interval: initialSettings.rotationInterval,
       })
-
-      setTheme(initialSettings.theme)
       return
     }
 
     void useUIStore.persist.rehydrate()
     void useRotationStore.persist.rehydrate()
-  }, [initialSettings, setTheme])
+  }, [initialSettings])
 
   return null
 }

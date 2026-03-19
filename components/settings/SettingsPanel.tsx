@@ -123,22 +123,19 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
   const [isSaving, setIsSaving] = useState(false)
   const [isResetting, setIsResetting] = useState(false)
 
-  // Sync UI store, rotation store, and theme with settings on mount and when settings change
+  // Sync UI and rotation runtime state with the editable settings form.
   useEffect(() => {
     setFontSize(settings.fontSize)
     setLayoutMode(settings.layoutMode)
-    setTheme(settings.theme)
     setRotationMode(settings.rotationMode)
     setRotationInterval(settings.rotationInterval)
   }, [
     settings.fontSize,
     settings.layoutMode,
-    settings.theme,
     settings.rotationMode,
     settings.rotationInterval,
     setFontSize,
     setLayoutMode,
-    setTheme,
     setRotationMode,
     setRotationInterval,
   ])
@@ -150,6 +147,7 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
 
       if (result.success && result.settings) {
         setSettings(result.settings)
+        setTheme(result.settings.theme)
         toast({
           title: t('saveSuccess'),
           description: t('saveSuccessDescription'),
@@ -179,6 +177,7 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
 
       if (result.success && result.settings) {
         setSettings(result.settings)
+        setTheme(result.settings.theme)
         toast({
           title: t('saveSuccess'),
           description: t('saveSuccessDescription'),
