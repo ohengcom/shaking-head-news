@@ -109,6 +109,7 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
   const t = useTranslations('settings')
   const tTier = useTranslations('tier')
   const tFeatures = useTranslations('features')
+  const tCommon = useTranslations('common')
   const { setFontSize, setLayoutMode } = useUIStore()
   const {
     setMode: setRotationMode,
@@ -544,26 +545,24 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
                 : '一键激活 Pro，解锁自定义 RSS、完整统计、健康提醒和去广告等能力。'}
             </CardDescription>
           </CardHeader>
-          {!isPro && (
-            <CardContent>
-              <Button
-                onClick={togglePro}
-                disabled={isTogglingPro}
-                className="bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600"
-              >
-                {isTogglingPro ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Sparkles className="mr-2 h-4 w-4" />
-                )}
-                {tFeatures('oneClickActivateButton')}
-              </Button>
-            </CardContent>
-          )}
+          <CardContent>
+            <Button
+              onClick={togglePro}
+              disabled={isTogglingPro}
+              className="bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600"
+            >
+              {isTogglingPro ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Sparkles className="mr-2 h-4 w-4" />
+              )}
+              {isPro ? `${tCommon('cancel')} ${tTier('pro')}` : tFeatures('oneClickActivateButton')}
+            </Button>
+          </CardContent>
         </Card>
       )}
 
-      {!isGuest && (
+      {isPro && (
         <Card>
           <CardHeader>
             <CardTitle>{t('newsSource') || '自定义订阅'}</CardTitle>
