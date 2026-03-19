@@ -167,6 +167,7 @@
     "deleteSource": "Delete RSS Source",
     "sourceName": "Source Name",
     "sourceNamePlaceholder": "e.g., Tech News",
+    "sourceNameHint": "Optional. Leave blank to use the feed title automatically",
     "sourceUrl": "Source URL",
     "sourceDescription": "Source Description",
     "sourceDescriptionPlaceholder": "Brief description of this RSS feed",
@@ -197,7 +198,7 @@
     "deleteFailed": "Failed to delete",
     "reorderFailed": "Failed to reorder",
     "invalidUrl": "Invalid RSS URL",
-    "requiredFields": "Please fill in all required fields",
+    "requiredFields": "Please enter the RSS URL",
     "cancel": "Cancel",
     "add": "Add",
     "adding": "Adding..."

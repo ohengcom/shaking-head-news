@@ -48,7 +48,7 @@ export function AddRSSSourceDialog() {
 
     try {
       // 验证必填字段
-      if (!formData.name.trim() || !formData.url.trim()) {
+      if (!formData.url.trim()) {
         toast({
           title: t('error'),
           description: t('requiredFields'),
@@ -129,16 +129,14 @@ export function AddRSSSourceDialog() {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="name">
-                {t('sourceName')} <span className="text-destructive">*</span>
-              </Label>
+              <Label htmlFor="name">{t('sourceName')}</Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder={t('sourceNamePlaceholder')}
-                required
               />
+              <p className="text-muted-foreground text-xs">{t('sourceNameHint')}</p>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="url">

@@ -16,7 +16,7 @@ import {
   validateOrThrow,
 } from '@/lib/utils/error-handler'
 import { sanitizeObject, sanitizeString } from '@/lib/utils/input-validation'
-import { assertSafeExternalUrl, verifyExternalUrlReachable } from '@/lib/utils/external-fetch'
+import { assertSafeExternalUrl, fetchExternalText } from '@/lib/utils/external-fetch'
 
 const DEFAULT_RSS_SOURCES: RSSSource[] = [
   {
@@ -62,19 +62,61 @@ async function requireCustomRssAccess() {
   }
 }
 
-async function validateRssUrl(url: string): Promise<string> {
-  const safeUrl = await assertSafeExternalUrl(url, { allowHttp: true })
+function extractFeedTitle(xml: string): string | null {
+  try {
+    const parser = new XMLParser({
+      ignoreAttributes: false,
+      attributeNamePrefix: '@_',
+    })
+    const parsed = parser.parse(xml)
+    const channel = parsed.rss?.channel || parsed.feed
 
-  await verifyExternalUrlReachable(safeUrl.toString(), {
+    if (!channel) {
+      return null
+    }
+
+    const rawTitle = channel.title
+    if (typeof rawTitle === 'string' && rawTitle.trim()) {
+      return rawTitle.trim()
+    }
+
+    if (
+      rawTitle &&
+      typeof rawTitle === 'object' &&
+      '#text' in (rawTitle as Record<string, unknown>)
+    ) {
+      const text = String((rawTitle as Record<string, unknown>)['#text'] || '').trim()
+      return text || null
+    }
+
+    return null
+  } catch {
+    return null
+  }
+}
+
+async function validateRssUrl(url: string): Promise<{ url: string; title: string | null }> {
+  const safeUrl = await assertSafeExternalUrl(url, { allowHttp: true })
+  const { text, finalUrl } = await fetchExternalText(safeUrl.toString(), {
     context: 'validateRssUrl',
     allowHttp: true,
     timeoutMs: 5000,
+    maxBytes: 256 * 1024,
+    cache: 'no-store',
     headers: {
       'User-Agent': 'ShakingHeadNews/1.0',
     },
   })
 
-  return safeUrl.toString()
+  const title = extractFeedTitle(text)
+  if (!title) {
+    throw new ValidationError('URL is reachable, but it is not a valid RSS or Atom feed')
+  }
+
+  return {
+    url: finalUrl.toString(),
+    title,
+  }
 }
 
 export async function getDefaultRSSSources(): Promise<RSSSource[]> {
@@ -124,11 +166,17 @@ export async function addRSSSource(source: Omit<RSSSource, 'id' | 'order' | 'fai
       throw new Error('Too many RSS sources added. Please try again later.')
     }
 
-    const safeUrl = await validateRssUrl(source.url)
+    const { url: safeUrl, title: feedTitle } = await validateRssUrl(source.url)
+    const sanitizedName = sanitizeString(source.name ?? '', { maxLength: 200 })
+    const resolvedName =
+      sanitizedName ||
+      sanitizeString(feedTitle || new URL(safeUrl).hostname, {
+        maxLength: 200,
+      })
     const sanitizedSource = {
       ...source,
       url: safeUrl,
-      name: sanitizeString(source.name, { maxLength: 200 }),
+      name: resolvedName,
       description: source.description
         ? sanitizeString(source.description, { maxLength: 500 })
         : undefined,
@@ -197,7 +245,7 @@ export async function updateRSSSource(id: string, updates: Partial<RSSSource>) {
     })
 
     if (sanitizedUpdates.url && typeof sanitizedUpdates.url === 'string') {
-      sanitizedUpdates.url = await validateRssUrl(sanitizedUpdates.url)
+      sanitizedUpdates.url = (await validateRssUrl(sanitizedUpdates.url)).url
     }
 
     const sources = await getRSSSources()
@@ -400,7 +448,7 @@ export async function importOPML(
       }
 
       try {
-        const safeUrl = await validateRssUrl(source.url)
+        const { url: safeUrl } = await validateRssUrl(source.url)
 
         if (existingUrls.has(safeUrl.toLowerCase())) {
           skipped += 1

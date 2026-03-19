@@ -167,6 +167,7 @@
     "deleteSource": "删除 RSS 源",
     "sourceName": "源名称",
     "sourceNamePlaceholder": "例如：科技新闻",
+    "sourceNameHint": "可留空，系统会自动读取订阅标题",
     "sourceUrl": "源地址",
     "sourceDescription": "源描述",
     "sourceDescriptionPlaceholder": "简要描述这个 RSS 源的内容",
@@ -197,7 +198,7 @@
     "deleteFailed": "删除失败",
     "reorderFailed": "排序失败",
     "invalidUrl": "无效的 RSS 地址",
-    "requiredFields": "请填写所有必填字段",
+    "requiredFields": "请填写 RSS 地址",
     "cancel": "取消",
     "add": "添加",
     "adding": "添加中..."
