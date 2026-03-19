@@ -11,6 +11,7 @@ import { RSSSourceSchema, type RSSSource } from '@/types/rss'
 import {
   AuthError,
   NotFoundError,
+  RateLimitError,
   ValidationError,
   logError,
   validateOrThrow,
@@ -53,6 +54,26 @@ const DEFAULT_RSS_SOURCES: RSSSource[] = [
     failureCount: 0,
   },
 ]
+
+export type AddRSSSourceErrorCode =
+  | 'rssAddAuthRequired'
+  | 'rssAddProRequired'
+  | 'rssAddRateLimited'
+  | 'rssAddLimitReached'
+  | 'rssAddInvalidUrl'
+  | 'rssAddFeedNotFound'
+  | 'rssAddUnavailable'
+  | 'rssAddFailed'
+
+export type AddRSSSourceResult =
+  | {
+      success: true
+      source: RSSSource
+    }
+  | {
+      success: false
+      errorCode: AddRSSSourceErrorCode
+    }
 
 async function requireCustomRssAccess() {
   const { features } = await getUserTier()
@@ -270,7 +291,48 @@ export async function getRSSSources(): Promise<RSSSource[]> {
   }
 }
 
-export async function addRSSSource(source: Omit<RSSSource, 'id' | 'order' | 'failureCount'>) {
+function mapAddRSSSourceError(error: unknown): AddRSSSourceErrorCode {
+  if (error instanceof AuthError) {
+    return error.message.includes('Pro') ? 'rssAddProRequired' : 'rssAddAuthRequired'
+  }
+
+  if (error instanceof RateLimitError) {
+    return 'rssAddRateLimited'
+  }
+
+  if (error instanceof ValidationError) {
+    if (error.message.includes('Maximum number of RSS sources')) {
+      return 'rssAddLimitReached'
+    }
+
+    if (
+      error.message.includes('Could not find a valid RSS or Atom feed') ||
+      error.message.includes('not a valid RSS or Atom feed')
+    ) {
+      return 'rssAddFeedNotFound'
+    }
+
+    return 'rssAddInvalidUrl'
+  }
+
+  if (error instanceof Error) {
+    if (
+      error.message.includes('fetch failed') ||
+      error.message.includes('request failed') ||
+      error.message.includes('timed out') ||
+      error.message.includes('aborted') ||
+      error.message.includes('External')
+    ) {
+      return 'rssAddUnavailable'
+    }
+  }
+
+  return 'rssAddFailed'
+}
+
+export async function addRSSSource(
+  source: Omit<RSSSource, 'id' | 'order' | 'failureCount'>
+): Promise<AddRSSSourceResult> {
   try {
     const session = await auth()
 
@@ -285,7 +347,7 @@ export async function addRSSSource(source: Omit<RSSSource, 'id' | 'order' | 'fai
     })
 
     if (!rateLimitResult.success) {
-      throw new Error('Too many RSS sources added. Please try again later.')
+      throw new RateLimitError('Too many RSS sources added. Please try again later.')
     }
 
     const { url: safeUrl, title: feedTitle } = await validateRssUrl(source.url)
@@ -327,18 +389,20 @@ export async function addRSSSource(source: Omit<RSSSource, 'id' | 'order' | 'fai
     revalidateTag(CacheTags.rssFeed(validatedSource.url), 'max')
     revalidatePath('/rss')
 
-    return validatedSource
+    return {
+      success: true,
+      source: validatedSource,
+    }
   } catch (error) {
     logError(error, {
       action: 'addRSSSource',
       source,
     })
 
-    if (error instanceof ValidationError || error instanceof AuthError) {
-      throw error
+    return {
+      success: false,
+      errorCode: mapAddRSSSourceError(error),
     }
-
-    throw new ValidationError('Invalid RSS URL or URL is not accessible')
   }
 }
 

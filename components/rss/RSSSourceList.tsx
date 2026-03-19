@@ -1,15 +1,15 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { RSSSource } from '@/types/rss'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Switch } from '@/components/ui/switch'
-import { Badge } from '@/components/ui/badge'
-import { useToast } from '@/hooks/use-toast'
-import { updateRSSSource, deleteRSSSource, reorderRSSSources } from '@/lib/actions/rss'
-import { Trash2, GripVertical, AlertCircle } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { AlertCircle, GripVertical, Trash2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { deleteRSSSource, reorderRSSSources, updateRSSSource } from '@/lib/actions/rss'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Switch } from '@/components/ui/switch'
+import { useToast } from '@/hooks/use-toast'
+import { RSSSource } from '@/types/rss'
 
 interface RSSSourceListProps {
   initialSources: RSSSource[]
@@ -99,7 +99,6 @@ export function RSSSourceList({ initialSources }: RSSSourceListProps) {
         description: t('reorderFailed'),
         variant: 'destructive',
       })
-      // 重新加载以恢复原始顺序
       setSources(initialSources)
     } finally {
       setDraggedItem(null)
@@ -117,7 +116,7 @@ export function RSSSourceList({ initialSources }: RSSSourceListProps) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {sources.map((source) => (
         <Card
           key={source.id}
@@ -129,26 +128,43 @@ export function RSSSourceList({ initialSources }: RSSSourceListProps) {
             draggedItem === source.id ? 'opacity-50' : ''
           }`}
         >
-          <CardHeader className="pb-3">
-            <div className="flex items-start justify-between">
-              <div className="flex flex-1 items-start gap-3">
-                <GripVertical className="text-muted-foreground mt-1 h-5 w-5" />
-                <div className="flex-1">
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    {source.name}
-                    {source.failureCount > 0 && (
-                      <Badge variant="destructive" className="text-xs">
-                        <AlertCircle className="mr-1 h-3 w-3" />
-                        {source.failureCount} {t('failures')}
-                      </Badge>
-                    )}
-                  </CardTitle>
-                  <CardDescription className="mt-1">
-                    {source.description || source.url}
-                  </CardDescription>
+          <CardContent className="px-4 py-4">
+            <div className="flex items-start gap-3">
+              <GripVertical className="text-muted-foreground mt-1 h-4 w-4 shrink-0" />
+
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="text-base leading-tight font-semibold break-all">{source.name}</h3>
+                  {source.failureCount > 0 && (
+                    <Badge variant="destructive" className="text-xs">
+                      <AlertCircle className="mr-1 h-3 w-3" />
+                      {source.failureCount} {t('failures')}
+                    </Badge>
+                  )}
+                </div>
+
+                <p className="text-muted-foreground mt-1 text-sm break-all">{source.url}</p>
+
+                {source.description && source.description !== source.url && (
+                  <p className="text-muted-foreground/80 mt-1 text-xs">{source.description}</p>
+                )}
+
+                <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                  <Badge variant="outline">{source.language === 'zh' ? '中文' : 'English'}</Badge>
+                  {source.tags.map((tag) => (
+                    <Badge key={tag} variant="secondary" className="text-xs">
+                      {tag}
+                    </Badge>
+                  ))}
+                  {source.lastFetchedAt && (
+                    <span className="text-muted-foreground text-xs">
+                      {t('lastFetched')}: {new Date(source.lastFetchedAt).toLocaleString()}
+                    </span>
+                  )}
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+
+              <div className="flex shrink-0 items-center gap-1 self-center">
                 <Switch
                   checked={source.enabled}
                   onCheckedChange={(checked) => handleToggleEnabled(source.id, checked)}
@@ -157,27 +173,12 @@ export function RSSSourceList({ initialSources }: RSSSourceListProps) {
                   variant="ghost"
                   size="icon"
                   onClick={() => handleDelete(source.id)}
-                  className="text-destructive hover:text-destructive"
+                  className="text-destructive hover:text-destructive h-8 w-8"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              <Badge variant="outline">{source.language === 'zh' ? '中文' : 'English'}</Badge>
-              {source.tags.map((tag) => (
-                <Badge key={tag} variant="secondary">
-                  {tag}
-                </Badge>
-              ))}
-            </div>
-            {source.lastFetchedAt && (
-              <p className="text-muted-foreground mt-2 text-xs">
-                {t('lastFetched')}: {new Date(source.lastFetchedAt).toLocaleString()}
-              </p>
-            )}
           </CardContent>
         </Card>
       ))}

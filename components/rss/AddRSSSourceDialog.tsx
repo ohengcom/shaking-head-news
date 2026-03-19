@@ -77,7 +77,7 @@ export function AddRSSSourceDialog() {
         .map((tag) => tag.trim())
         .filter((tag) => tag.length > 0)
 
-      await addRSSSource({
+      const result = await addRSSSource({
         name: formData.name.trim(),
         url: formData.url.trim(),
         description: formData.description.trim() || undefined,
@@ -85,6 +85,15 @@ export function AddRSSSourceDialog() {
         enabled: formData.enabled,
         tags,
       })
+
+      if (!result.success) {
+        toast({
+          title: t('error'),
+          description: t(result.errorCode),
+          variant: 'destructive',
+        })
+        return
+      }
 
       toast({
         title: t('success'),
