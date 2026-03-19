@@ -11,7 +11,7 @@ import { rateLimitByUser, RateLimitTiers } from '@/lib/rate-limit'
  * 需求: 8.1 - 完成旋转周期时存储运动记录
  * 包含速率限制以防止滥用
  */
-export async function recordRotation(angle: number, duration: number) {
+export async function recordRotation(angle: number, duration: number, count: number = 1) {
   try {
     const session = await auth()
 
@@ -31,7 +31,7 @@ export async function recordRotation(angle: number, duration: number) {
     }
 
     // 验证输入参数
-    if (typeof angle !== 'number' || typeof duration !== 'number') {
+    if (typeof angle !== 'number' || typeof duration !== 'number' || typeof count !== 'number') {
       throw new Error('Invalid input parameters')
     }
 
@@ -43,6 +43,10 @@ export async function recordRotation(angle: number, duration: number) {
     // 限制持续时间范围 (0 到 3600秒，即1小时)
     if (duration < 0 || duration > 3600) {
       throw new Error('Duration must be between 0 and 3600 seconds')
+    }
+
+    if (!Number.isInteger(count) || count < 1 || count > 500) {
+      throw new Error('Count must be an integer between 1 and 500')
     }
 
     const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD
@@ -63,9 +67,10 @@ export async function recordRotation(angle: number, duration: number) {
       timestamp: Date.now(),
       angle,
       duration,
+      count,
     }
 
-    stats.rotationCount += 1
+    stats.rotationCount += count
     stats.totalDuration += duration
     stats.records.push(record)
 
@@ -85,6 +90,7 @@ export async function recordRotation(angle: number, duration: number) {
     logError(error, {
       action: 'recordRotation',
       duration,
+      count,
     })
     return {
       error: 'INTERNAL_ERROR',

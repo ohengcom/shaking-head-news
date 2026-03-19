@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import { Inter, Noto_Sans_SC } from 'next/font/google'
 import { headers } from 'next/headers'
-import Script from 'next/script'
 import { getMessages } from 'next-intl/server'
 import { NextIntlClientProvider } from 'next-intl'
 import './globals.css'
@@ -128,9 +127,8 @@ export default async function RootLayout({
           </UserTierProvider>
         </SessionProvider>
         {env.NEXT_PUBLIC_ADSENSE_CLIENT_ID && adsEnabled && (
-          <Script
+          <script
             async
-            strategy="afterInteractive"
             nonce={nonce}
             src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${env.NEXT_PUBLIC_ADSENSE_CLIENT_ID}`}
             crossOrigin="anonymous"

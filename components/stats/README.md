@@ -46,7 +46,7 @@ Health reminder component that:
 
 Server actions for statistics management:
 
-- `recordRotation(angle, duration)` - Records a rotation event
+- `recordRotation(angle, duration, count?)` - Records one rotation or a batched rotation payload
 - `getStats(startDate, endDate)` - Gets stats for a date range
 - `getTodayStats()` - Gets today's statistics
 - `getWeekStats()` - Gets last 7 days statistics
@@ -61,7 +61,7 @@ Server actions for statistics management:
 
 1. **Recording Rotations**:
    - TiltWrapper component records rotations automatically
-   - Calls `recordRotation()` server action
+   - Batches recent rotations before calling `recordRotation()`
    - Data stored in Vercel Marketplace Storage with 90-day retention
 
 2. **Displaying Statistics**:
@@ -103,8 +103,8 @@ export default async function StatsPage() {
 import { recordRotation } from '@/lib/actions/stats'
 
 // In TiltWrapper or similar component
-const handleRotation = async (angle: number, duration: number) => {
-  await recordRotation(angle, duration)
+const handleRotation = async (angle: number, duration: number, count = 1) => {
+  await recordRotation(angle, duration, count)
 }
 ```
 

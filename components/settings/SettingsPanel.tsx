@@ -522,17 +522,6 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
       )}
 
       {!isGuest && (
-        <Card>
-          <CardHeader>
-            <CardTitle>{isPro ? tTier('pro') : tTier('member')}</CardTitle>
-            <CardDescription>
-              {isPro ? tFeatures('proCurrentMessage') : tFeatures('memberCurrentMessage')}
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      )}
-
-      {!isGuest && (
         <Card className={isPro ? 'border-amber-500/40 bg-amber-50/40 dark:bg-amber-950/10' : ''}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">

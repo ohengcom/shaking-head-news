@@ -54,7 +54,7 @@ export function TiltWrapper({
     }
 
     const totalDuration = batch.reduce((sum, rotation) => sum + rotation.duration, 0)
-    recordRotation(lastEntry.angle, totalDuration).catch(() => {
+    recordRotation(lastEntry.angle, totalDuration, batch.length).catch(() => {
       // Stats are non-critical and should not block rendering.
     })
   }, [])
@@ -72,7 +72,11 @@ export function TiltWrapper({
       }
 
       const totalDuration = batch.reduce((sum, rotation) => sum + rotation.duration, 0)
-      const data = JSON.stringify({ angle: lastEntry.angle, duration: totalDuration })
+      const data = JSON.stringify({
+        angle: lastEntry.angle,
+        duration: totalDuration,
+        count: batch.length,
+      })
       navigator.sendBeacon?.('/api/stats/rotation', data)
     }
 
