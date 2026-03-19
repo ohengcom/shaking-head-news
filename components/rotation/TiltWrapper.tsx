@@ -1,16 +1,17 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { useEffect, useState, useRef, useCallback } from 'react'
 import { usePathname } from 'next/navigation'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { recordRotation } from '@/lib/actions/stats'
 import { useRotationStore } from '@/lib/stores/rotation-store'
 import { cn } from '@/lib/utils'
 
 interface TiltWrapperProps {
   children: React.ReactNode
-  mode?: 'fixed' | 'continuous'
-  interval?: number
+  initialMode?: 'fixed' | 'continuous'
+  initialInterval?: number
+  initialAnimationEnabled?: boolean
 }
 
 interface PendingRotation {
@@ -22,8 +23,9 @@ const BATCH_INTERVAL_MS = 5 * 60 * 1000
 
 export function TiltWrapper({
   children,
-  mode: propMode,
-  interval: propInterval,
+  initialMode,
+  initialInterval,
+  initialAnimationEnabled,
 }: TiltWrapperProps) {
   const { angle, setAngle, isPaused, mode, interval } = useRotationStore()
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
@@ -33,8 +35,9 @@ export function TiltWrapper({
   const pendingRotations = useRef<PendingRotation[]>([])
   const pathname = usePathname()
 
-  const effectiveMode = propMode ?? mode
-  const effectiveInterval = propInterval ?? interval
+  const effectiveMode = isHydrated ? mode : (initialMode ?? mode)
+  const effectiveInterval = isHydrated ? interval : (initialInterval ?? interval)
+  const effectiveIsPaused = isHydrated ? isPaused : initialAnimationEnabled === false
   const isSettingsPage = pathname === '/settings' || pathname === '/rss'
 
   const flushRotations = useCallback(() => {
@@ -87,12 +90,6 @@ export function TiltWrapper({
   }, [flushRotations])
 
   useEffect(() => {
-    try {
-      useRotationStore.persist.rehydrate()
-    } catch (error) {
-      console.error('Rehydration failed:', error)
-    }
-
     setIsHydrated(true)
   }, [])
 
@@ -123,7 +120,7 @@ export function TiltWrapper({
       return
     }
 
-    if (isPaused || effectiveMode === 'fixed' || prefersReducedMotion || isSettingsPage) {
+    if (effectiveIsPaused || effectiveMode === 'fixed' || prefersReducedMotion || isSettingsPage) {
       return
     }
 
@@ -146,9 +143,9 @@ export function TiltWrapper({
     return () => clearInterval(timer)
   }, [
     effectiveInterval,
+    effectiveIsPaused,
     effectiveMode,
     isHydrated,
-    isPaused,
     isSettingsPage,
     prefersReducedMotion,
     setAngle,

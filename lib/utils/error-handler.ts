@@ -173,7 +173,7 @@ export function validateOrThrow<T extends z.ZodType>(schema: T, data: unknown): 
 }
 
 /**
- * Log error for monitoring (can be extended to send to Sentry, etc.)
+ * Log error with structured context.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Context can contain any type of data for error logging
 export function logError(error: unknown, context?: Record<string, any>) {
@@ -191,11 +191,6 @@ export function logError(error: unknown, context?: Record<string, any>) {
   }
 
   console.error('Application error:', errorInfo)
-
-  // Extension point: integrate external error monitoring (e.g. Sentry)
-  // if (process.env.SENTRY_DSN) {
-  //   Sentry.captureException(error, { extra: context })
-  // }
 }
 
 /**

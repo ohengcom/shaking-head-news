@@ -9,6 +9,9 @@ import { NewsAPIError } from '@/lib/errors/news-error'
 import { fetchAiNews } from '@/lib/api/daily-news'
 import { getHotList } from '@/lib/api/hot-list'
 import { fetchTrending, type TrendingItem } from '@/lib/api/trending'
+import { CacheKeys, CacheTags } from '@/lib/cache-keys'
+import { env } from '@/lib/env'
+import { deleteStorageItem, getStorageItem, setStorageItem } from '@/lib/storage'
 import {
   RawNewsResponseSchema,
   NewsItemSchema,
@@ -17,10 +20,13 @@ import {
 } from '@/types/news'
 import { logError, retryWithBackoff, validateOrThrow } from '@/lib/utils/error-handler'
 import { fetchExternalJson, fetchExternalText } from '@/lib/utils/external-fetch'
+import { type RSSSource } from '@/types/rss'
 
-const NEWS_API_BASE_URL = process.env.NEWS_API_BASE_URL || 'https://news.ravelloh.top'
+const NEWS_API_BASE_URL = env.NEWS_API_BASE_URL
 const DEFAULT_REVALIDATE = 3600
 const RSS_REVALIDATE = 1800
+const RSS_SNAPSHOT_TTL_SECONDS = 60 * 60 * 24
+const RSS_FETCH_CONCURRENCY = 4
 const NEWS_FETCH_TIMEOUT_MS = 4000
 const RSS_FETCH_TIMEOUT_MS = 4000
 const NEWS_RETRY_OPTIONS = {
@@ -30,6 +36,82 @@ const NEWS_RETRY_OPTIONS = {
 }
 const RSS_RETRY_OPTIONS = {
   maxRetries: 0,
+}
+
+const RSSFeedSnapshotSchema = z.object({
+  items: z.array(NewsItemSchema),
+  fetchedAt: z.string(),
+  sourceUrl: z.string(),
+})
+
+type RSSFeedSnapshot = z.infer<typeof RSSFeedSnapshotSchema>
+
+function isFreshRSSFeedSnapshot(snapshot: RSSFeedSnapshot): boolean {
+  const fetchedAt = Date.parse(snapshot.fetchedAt)
+
+  if (Number.isNaN(fetchedAt)) {
+    return false
+  }
+
+  return Date.now() - fetchedAt < RSS_REVALIDATE * 1000
+}
+
+async function getRSSFeedSnapshot(rssUrl: string): Promise<RSSFeedSnapshot | null> {
+  const snapshot = await getStorageItem<unknown>(CacheKeys.rssFeedSnapshot(rssUrl))
+
+  if (!snapshot) {
+    return null
+  }
+
+  try {
+    return validateOrThrow(RSSFeedSnapshotSchema, snapshot)
+  } catch {
+    return null
+  }
+}
+
+async function setRSSFeedSnapshot(rssUrl: string, snapshot: RSSFeedSnapshot): Promise<void> {
+  await setStorageItem(CacheKeys.rssFeedSnapshot(rssUrl), snapshot, RSS_SNAPSHOT_TTL_SECONDS)
+}
+
+async function mapRSSSourcesWithConcurrencyLimit(
+  sources: RSSSource[],
+  limit: number
+): Promise<PromiseSettledResult<NewsItem[]>[]> {
+  const results: PromiseSettledResult<NewsItem[]>[] = new Array(sources.length)
+  let currentIndex = 0
+
+  async function worker() {
+    while (true) {
+      const sourceIndex = currentIndex
+      currentIndex += 1
+
+      if (sourceIndex >= sources.length) {
+        return
+      }
+
+      const source = sources[sourceIndex]
+      if (!source) {
+        return
+      }
+
+      try {
+        results[sourceIndex] = {
+          status: 'fulfilled',
+          value: await getRSSNews(source.url),
+        }
+      } catch (error) {
+        results[sourceIndex] = {
+          status: 'rejected',
+          reason: error,
+        }
+      }
+    }
+  }
+
+  await Promise.all(Array.from({ length: Math.min(limit, sources.length) }, () => worker()))
+
+  return results
 }
 
 export async function getNews(
@@ -48,7 +130,11 @@ export async function getNews(
           timeoutMs: NEWS_FETCH_TIMEOUT_MS,
           next: {
             revalidate: DEFAULT_REVALIDATE,
-            tags: ['news', `news-${language}`, source ? `news-${source}` : 'news-latest'],
+            tags: [
+              CacheTags.news,
+              CacheTags.newsLanguage(language),
+              ...(source ? [CacheTags.newsSource(source)] : []),
+            ],
           },
           cache: 'force-cache',
         }),
@@ -90,11 +176,11 @@ export async function getNews(
 export async function refreshNews(language?: 'zh' | 'en', source?: string) {
   try {
     if (source) {
-      revalidateTag(`news-${source}`, 'max')
+      revalidateTag(CacheTags.newsSource(source), 'max')
     } else if (language) {
-      revalidateTag(`news-${language}`, 'max')
+      revalidateTag(CacheTags.newsLanguage(language), 'max')
     } else {
-      revalidateTag('news', 'max')
+      revalidateTag(CacheTags.news, 'max')
     }
 
     return { success: true }
@@ -126,7 +212,7 @@ export async function getUserCustomNews(): Promise<NewsItem[]> {
       return []
     }
 
-    const results = await Promise.allSettled(enabledSources.map((source) => getRSSNews(source.url)))
+    const results = await mapRSSSourcesWithConcurrencyLimit(enabledSources, RSS_FETCH_CONCURRENCY)
     const allItems: NewsItem[] = []
 
     results.forEach((result, index) => {
@@ -294,6 +380,12 @@ function parseRSSFeed(xml: string, sourceUrl: string): NewsItem[] {
 }
 
 export async function getRSSNews(rssUrl: string): Promise<NewsItem[]> {
+  const cachedSnapshot = await getRSSFeedSnapshot(rssUrl)
+
+  if (cachedSnapshot && isFreshRSSFeedSnapshot(cachedSnapshot)) {
+    return cachedSnapshot.items
+  }
+
   try {
     const { text, finalUrl } = await retryWithBackoff(
       () =>
@@ -304,7 +396,7 @@ export async function getRSSNews(rssUrl: string): Promise<NewsItem[]> {
           maxBytes: 2 * 1024 * 1024,
           next: {
             revalidate: RSS_REVALIDATE,
-            tags: ['rss', `rss-${rssUrl}`],
+            tags: [CacheTags.rss, CacheTags.rssFeed(rssUrl)],
           },
           cache: 'force-cache',
         }),
@@ -317,12 +409,22 @@ export async function getRSSNews(rssUrl: string): Promise<NewsItem[]> {
       throw new NewsAPIError('No valid items found in RSS feed', 404, rssUrl)
     }
 
+    await setRSSFeedSnapshot(rssUrl, {
+      items,
+      fetchedAt: new Date().toISOString(),
+      sourceUrl: finalUrl.toString(),
+    })
+
     return items
   } catch (error) {
     logError(error, {
       action: 'getRSSNews',
       rssUrl,
     })
+
+    if (cachedSnapshot?.items.length) {
+      return cachedSnapshot.items
+    }
 
     if (error instanceof NewsAPIError) {
       throw error
@@ -338,7 +440,8 @@ export async function getRSSNews(rssUrl: string): Promise<NewsItem[]> {
 
 export async function refreshRSSFeed(rssUrl: string) {
   try {
-    revalidateTag(`rss-${rssUrl}`, 'max')
+    await deleteStorageItem(CacheKeys.rssFeedSnapshot(rssUrl))
+    revalidateTag(CacheTags.rssFeed(rssUrl), 'max')
     return { success: true }
   } catch (error) {
     logError(error, {
@@ -351,7 +454,11 @@ export async function refreshRSSFeed(rssUrl: string) {
 
 export async function refreshRSSCache() {
   try {
-    revalidateTag('rss', 'max')
+    const rssSources = await getRSSSources().catch(() => [])
+    await Promise.all(
+      rssSources.map((source) => deleteStorageItem(CacheKeys.rssFeedSnapshot(source.url)))
+    )
+    revalidateTag(CacheTags.rss, 'max')
     return { success: true }
   } catch (error) {
     logError(error, {
@@ -364,9 +471,9 @@ export async function refreshRSSCache() {
 export async function refreshHotList(sourceId?: string) {
   try {
     if (sourceId) {
-      revalidateTag(`hotlist-${sourceId}`, 'max')
+      revalidateTag(CacheTags.hotListSource(sourceId), 'max')
     } else {
-      revalidateTag('hotlist', 'max')
+      revalidateTag(CacheTags.hotList, 'max')
     }
 
     return { success: true }

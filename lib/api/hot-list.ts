@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { CacheTags } from '@/lib/cache-keys'
 import { fetchExternalJson } from '@/lib/utils/external-fetch'
 
 export interface HotItem {
@@ -48,7 +49,7 @@ export async function getHotList(sourceId: string): Promise<HotItem[]> {
         context: 'getHotList:today-in-history',
         timeoutMs: 4000,
         allowedHosts: ['60s.viki.moe'],
-        next: { revalidate: 300, tags: ['hotlist', `hotlist-${sourceId}`] },
+        next: { revalidate: 300, tags: [CacheTags.hotList, CacheTags.hotListSource(sourceId)] },
       })
 
       return response.data.items.map((item) => ({
@@ -62,7 +63,7 @@ export async function getHotList(sourceId: string): Promise<HotItem[]> {
       context: `getHotList:${sourceId}`,
       timeoutMs: 4000,
       allowedHosts: ['60s.viki.moe'],
-      next: { revalidate: 300, tags: ['hotlist', `hotlist-${sourceId}`] },
+      next: { revalidate: 300, tags: [CacheTags.hotList, CacheTags.hotListSource(sourceId)] },
     })
 
     return response.data.map((item) => ({

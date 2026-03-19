@@ -1,1 +1,1 @@
-export { auth, handlers, signIn, signOut } from '@/auth'
+export { auth, configuredAuthProviders, handlers, signIn, signOut } from '@/auth'

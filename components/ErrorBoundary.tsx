@@ -16,7 +16,7 @@ interface ErrorBoundaryProps {
  */
 export function ErrorBoundary({ error, reset }: ErrorBoundaryProps) {
   useEffect(() => {
-    // Log error to monitoring service
+    // Log error with runtime context for debugging.
     logError(error, {
       digest: error.digest,
       component: 'ErrorBoundary',

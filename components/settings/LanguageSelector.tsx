@@ -1,6 +1,10 @@
 'use client'
 
+import { Globe } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
+import { useState, useTransition } from 'react'
+import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -8,11 +12,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Label } from '@/components/ui/label'
 import { updateSettings } from '@/lib/actions/settings'
 import { useToast } from '@/hooks/use-toast'
-import { useState, useTransition } from 'react'
-import { Globe } from 'lucide-react'
 
 interface LanguageSelectorProps {
   currentLanguage: 'zh' | 'en'
@@ -21,43 +22,32 @@ interface LanguageSelectorProps {
 export function LanguageSelector({ currentLanguage }: LanguageSelectorProps) {
   const t = useTranslations('settings')
   const { toast } = useToast()
+  const router = useRouter()
   const [language, setLanguage] = useState<'zh' | 'en'>(currentLanguage)
   const [isPending, startTransition] = useTransition()
 
-  const handleLanguageChange = async (newLanguage: 'zh' | 'en') => {
+  const handleLanguageChange = (newLanguage: 'zh' | 'en') => {
+    const previousLanguage = language
     setLanguage(newLanguage)
 
     startTransition(async () => {
-      try {
-        // Update settings in storage
-        await updateSettings({ language: newLanguage })
+      const result = await updateSettings({ language: newLanguage })
 
-        // Set cookie for next-intl (client-side only)
-        if (typeof document !== 'undefined') {
-          document.cookie = `locale=${newLanguage}; path=/; max-age=31536000`
-        }
-
+      if (result.success) {
         toast({
           title: t('saveSuccess'),
           description: t('saveSuccessDescription'),
         })
-
-        // Reload page to apply new language (client-side only)
-        if (typeof window !== 'undefined') {
-          setTimeout(() => {
-            window.location.reload()
-          }, 500)
-        }
-      } catch (error) {
-        console.error('Failed to update language:', error)
-        toast({
-          title: t('saveError'),
-          description: t('saveErrorDescription'),
-          variant: 'destructive',
-        })
-        // Revert on error
-        setLanguage(currentLanguage)
+        router.refresh()
+        return
       }
+
+      toast({
+        title: t('saveError'),
+        description: result.error || t('saveErrorDescription'),
+        variant: 'destructive',
+      })
+      setLanguage(previousLanguage)
     })
   }
 

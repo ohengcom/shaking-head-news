@@ -1,12 +1,22 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { cookies } from 'next/headers'
 import { auth } from '@/lib/auth'
 import { rateLimitByUser, RateLimitTiers } from '@/lib/rate-limit'
 import { getStorageItem, setStorageItem, StorageKeys } from '@/lib/storage'
 import { defaultSettings, UserSettings, UserSettingsSchema } from '@/types/settings'
 import { AuthError, logError, validateOrThrow } from '@/lib/utils/error-handler'
 import { sanitizeObject } from '@/lib/utils/input-validation'
+
+async function persistLocaleCookie(language: UserSettings['language']) {
+  const cookieStore = await cookies()
+  cookieStore.set('locale', language, {
+    path: '/',
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24 * 365,
+  })
+}
 
 export async function getUserSettings(): Promise<UserSettings> {
   const session = await auth()
@@ -72,6 +82,7 @@ export async function updateSettings(
 
     const validatedSettings = validateOrThrow(UserSettingsSchema, nextSettings)
     await setStorageItem(StorageKeys.userSettings(session.user.id), validatedSettings)
+    await persistLocaleCookie(validatedSettings.language)
 
     revalidatePath('/')
     revalidatePath('/settings')
@@ -121,6 +132,7 @@ export async function resetSettings(): Promise<{
     }
 
     await setStorageItem(StorageKeys.userSettings(session.user.id), resetValue)
+    await persistLocaleCookie(resetValue.language)
 
     revalidatePath('/')
     revalidatePath('/settings')

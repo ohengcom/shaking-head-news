@@ -7,7 +7,7 @@ This guide explains the error handling system implemented in the application.
 The application uses a unified error handling approach with:
 
 - Custom error classes for different error types
-- Consistent error logging and monitoring
+- Consistent error logging
 - User-friendly error messages
 - Error boundaries for React components
 - Validation error handling with Zod
@@ -174,7 +174,7 @@ The `ErrorBoundary` component provides:
 - User-friendly error messages
 - Retry functionality
 - Navigation back to home
-- Error logging to monitoring services
+- Error logging to runtime logs
 
 ## Error Pages
 
@@ -201,7 +201,7 @@ export default async function Page({ params }) {
 
 ## Error Logging
 
-All errors are logged with context for debugging and monitoring:
+All errors are logged with context for debugging:
 
 ```typescript
 import { logError } from '@/lib/utils/error-handler'
@@ -215,23 +215,6 @@ try {
     additionalContext: 'value',
   })
   throw error
-}
-```
-
-### Integration with Monitoring Services
-
-The `logError` function can be extended to send errors to monitoring services like Sentry:
-
-```typescript
-// In lib/utils/error-handler.ts
-export function logError(error: unknown, context?: Record<string, any>) {
-  // Console logging
-  console.error('Application error:', { error, context })
-
-  // Send to Sentry (when configured)
-  if (process.env.NODE_ENV === 'production' && typeof Sentry !== 'undefined') {
-    Sentry.captureException(error, { extra: context })
-  }
 }
 ```
 
@@ -386,7 +369,7 @@ it('should display error message', () => {
 
 1. Check console for error output
 2. Verify `logError` is being called
-3. Check monitoring service configuration
+3. Check runtime logs in your deployment platform
 
 ## Summary
 
@@ -399,6 +382,6 @@ The error handling system provides:
 - ✅ Automatic retry for transient errors
 - ✅ Error boundaries for React components
 - ✅ Custom error pages (404, 500)
-- ✅ Integration-ready for monitoring services
+- ✅ Integration-ready structured logging
 
 For questions or issues, refer to the implementation in `lib/utils/error-handler.ts`.

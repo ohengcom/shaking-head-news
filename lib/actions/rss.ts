@@ -4,6 +4,7 @@ import { revalidatePath, revalidateTag } from 'next/cache'
 import { XMLParser } from 'fast-xml-parser'
 import { auth } from '@/lib/auth'
 import { rateLimitByAction, RateLimitTiers } from '@/lib/rate-limit'
+import { CacheTags } from '@/lib/cache-keys'
 import { getStorageItem, setStorageItem, StorageKeys } from '@/lib/storage'
 import { getUserTier } from '@/lib/tier-server'
 import { RSSSourceSchema, type RSSSource } from '@/types/rss'
@@ -152,8 +153,8 @@ export async function addRSSSource(source: Omit<RSSSource, 'id' | 'order' | 'fai
 
     await setStorageItem(StorageKeys.userRSSSources(session.user.id), sources)
 
-    revalidateTag('rss', 'max')
-    revalidateTag(`rss-${validatedSource.url}`, 'max')
+    revalidateTag(CacheTags.rss, 'max')
+    revalidateTag(CacheTags.rssFeed(validatedSource.url), 'max')
     revalidatePath('/rss')
 
     return validatedSource
@@ -219,9 +220,9 @@ export async function updateRSSSource(id: string, updates: Partial<RSSSource>) {
     sources[index] = updatedSource
     await setStorageItem(StorageKeys.userRSSSources(session.user.id), sources)
 
-    revalidateTag('rss', 'max')
-    revalidateTag(`rss-${currentSource.url}`, 'max')
-    revalidateTag(`rss-${updatedSource.url}`, 'max')
+    revalidateTag(CacheTags.rss, 'max')
+    revalidateTag(CacheTags.rssFeed(currentSource.url), 'max')
+    revalidateTag(CacheTags.rssFeed(updatedSource.url), 'max')
     revalidatePath('/rss')
 
     return updatedSource
@@ -255,8 +256,8 @@ export async function deleteRSSSource(id: string) {
     const filteredSources = sources.filter((source) => source.id !== id)
     await setStorageItem(StorageKeys.userRSSSources(session.user.id), filteredSources)
 
-    revalidateTag('rss', 'max')
-    revalidateTag(`rss-${sourceToDelete.url}`, 'max')
+    revalidateTag(CacheTags.rss, 'max')
+    revalidateTag(CacheTags.rssFeed(sourceToDelete.url), 'max')
     revalidatePath('/rss')
   } catch (error) {
     logError(error, {
@@ -424,7 +425,7 @@ export async function importOPML(
       ...newSources,
     ])
 
-    revalidateTag('rss', 'max')
+    revalidateTag(CacheTags.rss, 'max')
     revalidatePath('/rss')
 
     return {

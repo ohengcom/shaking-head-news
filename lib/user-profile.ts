@@ -1,4 +1,5 @@
 import { defaultSettings, type UserSettings } from '@/types/settings'
+import { env } from '@/lib/env'
 import { sanitizeEmail } from '@/lib/utils/input-validation'
 import { getStorageItem, setStorageItem, StorageKeys } from '@/lib/storage'
 
@@ -41,8 +42,8 @@ function parseEnvList(value?: string): Set<string> {
   )
 }
 
-const proUserIds = parseEnvList(process.env.PRO_USER_IDS)
-const proUserEmails = parseEnvList(process.env.PRO_USER_EMAILS)
+const proUserIds = parseEnvList(env.PRO_USER_IDS)
+const proUserEmails = parseEnvList(env.PRO_USER_EMAILS)
 
 function normalizeEmail(email?: string | null): string | undefined {
   if (!email) {

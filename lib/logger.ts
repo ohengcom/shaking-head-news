@@ -1,31 +1,7 @@
-/**
- * Logging Strategy Module
- *
- * This module provides a structured logging system with different log levels
- * and output strategies based on the environment.
- *
- * Features:
- * - Multiple log levels (debug, info, warn, error)
- * - Structured logging with context
- * - Environment-aware output
- * - Integration with error monitoring (Sentry)
- * - Performance logging
- *
- * Usage:
- * ```typescript
- * import { logger } from '@/lib/logger'
- *
- * logger.info('User logged in', { userId: '123' })
- * logger.error('Failed to fetch news', error, { source: 'api' })
- * ```
- */
-
-import { captureException, captureMessage, addBreadcrumb } from './sentry'
-
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error'
 
 export interface LogContext {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Log context can contain any type of data
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Log context can contain arbitrary diagnostic values.
   [key: string]: any
 }
 
@@ -37,28 +13,13 @@ export interface LogEntry {
   error?: Error
 }
 
-/**
- * Logger configuration
- */
 const config = {
-  // Minimum log level to output
   minLevel:
     (process.env.NEXT_PUBLIC_LOG_LEVEL as LogLevel) ||
     (process.env.NODE_ENV === 'production' ? 'info' : 'debug'),
-
-  // Enable console output
-  enableConsole: true,
-
-  // Enable Sentry integration
-  enableSentry: process.env.NODE_ENV === 'production',
-
-  // Enable structured logging (JSON format)
   structured: process.env.NODE_ENV === 'production',
 }
 
-/**
- * Log level priorities
- */
 const levelPriority: Record<LogLevel, number> = {
   debug: 0,
   info: 1,
@@ -66,16 +27,10 @@ const levelPriority: Record<LogLevel, number> = {
   error: 3,
 }
 
-/**
- * Check if a log level should be output
- */
 function shouldLog(level: LogLevel): boolean {
   return levelPriority[level] >= levelPriority[config.minLevel]
 }
 
-/**
- * Format log entry for output
- */
 function formatLogEntry(entry: LogEntry): string {
   if (config.structured) {
     return JSON.stringify({
@@ -106,12 +61,7 @@ function formatLogEntry(entry: LogEntry): string {
   return parts.join(' ')
 }
 
-/**
- * Output log entry to console
- */
 function outputToConsole(entry: LogEntry) {
-  if (!config.enableConsole) return
-
   const formatted = formatLogEntry(entry)
 
   switch (entry.level) {
@@ -130,31 +80,6 @@ function outputToConsole(entry: LogEntry) {
   }
 }
 
-/**
- * Send log entry to Sentry
- */
-function sendToSentry(entry: LogEntry) {
-  if (!config.enableSentry) return
-
-  // Add breadcrumb for all logs
-  addBreadcrumb({
-    message: entry.message,
-    level: entry.level === 'debug' ? 'info' : entry.level === 'warn' ? 'warning' : entry.level,
-    category: 'log',
-    data: entry.context,
-  })
-
-  // Capture errors and warnings
-  if (entry.level === 'error' && entry.error) {
-    captureException(entry.error, entry.context)
-  } else if (entry.level === 'error' || entry.level === 'warn') {
-    captureMessage(entry.message, entry.level === 'error' ? 'error' : 'warning')
-  }
-}
-
-/**
- * Create a log entry
- */
 function createLogEntry(
   level: LogLevel,
   message: string,
@@ -170,109 +95,63 @@ function createLogEntry(
   }
 }
 
-/**
- * Log a message
- */
 function log(level: LogLevel, message: string, error?: Error, context?: LogContext) {
-  if (!shouldLog(level)) return
+  if (!shouldLog(level)) {
+    return
+  }
 
-  const entry = createLogEntry(level, message, error, context)
-
-  outputToConsole(entry)
-  sendToSentry(entry)
+  outputToConsole(createLogEntry(level, message, error, context))
 }
 
-/**
- * Logger instance
- */
 export const logger = {
-  /**
-   * Log debug message (development only)
-   */
   debug(message: string, context?: LogContext) {
     log('debug', message, undefined, context)
   },
 
-  /**
-   * Log info message
-   */
   info(message: string, context?: LogContext) {
     log('info', message, undefined, context)
   },
 
-  /**
-   * Log warning message
-   */
   warn(message: string, context?: LogContext) {
     log('warn', message, undefined, context)
   },
 
-  /**
-   * Log error message
-   */
   error(message: string, error?: Error, context?: LogContext) {
     log('error', message, error, context)
   },
 
-  /**
-   * Log API request
-   */
   apiRequest(method: string, url: string, context?: LogContext) {
     this.debug(`API Request: ${method} ${url}`, context)
   },
 
-  /**
-   * Log API response
-   */
   apiResponse(method: string, url: string, status: number, duration: number) {
     this.debug(`API Response: ${method} ${url} - ${status} (${duration}ms)`)
   },
 
-  /**
-   * Log API error
-   */
   apiError(method: string, url: string, error: Error, context?: LogContext) {
     this.error(`API Error: ${method} ${url}`, error, context)
   },
 
-  /**
-   * Log user action
-   */
   userAction(action: string, context?: LogContext) {
     this.info(`User Action: ${action}`, context)
   },
 
-  /**
-   * Log authentication event
-   */
   auth(event: 'login' | 'logout' | 'register', userId?: string) {
     this.info(`Auth: ${event}`, { userId })
   },
 
-  /**
-   * Log database operation
-   */
   database(operation: string, table: string, duration?: number) {
     this.debug(`Database: ${operation} ${table}`, { duration })
   },
 
-  /**
-   * Log cache operation
-   */
   cache(operation: 'hit' | 'miss' | 'set' | 'delete', key: string) {
     this.debug(`Cache: ${operation} ${key}`)
   },
 
-  /**
-   * Log performance metric
-   */
   performance(metric: string, value: number, unit: string = 'ms') {
     this.info(`Performance: ${metric} = ${value}${unit}`)
   },
 
-  /**
-   * Create a child logger with default context
-   */
   child(defaultContext: LogContext) {
     return {
       debug: (message: string, context?: LogContext) =>
@@ -287,16 +166,10 @@ export const logger = {
   },
 }
 
-/**
- * Create a logger for a specific module
- */
 export function createLogger(module: string) {
   return logger.child({ module })
 }
 
-/**
- * Measure and log execution time
- */
 export async function logExecutionTime<T>(
   name: string,
   fn: () => T | Promise<T>,
@@ -307,31 +180,21 @@ export async function logExecutionTime<T>(
   try {
     const result = await fn()
     const duration = performance.now() - start
-
     logger.performance(name, Math.round(duration), 'ms')
-
     return result
   } catch (error) {
     const duration = performance.now() - start
-
     logger.error(`${name} failed after ${Math.round(duration)}ms`, error as Error, context)
-
     throw error
   }
 }
 
-/**
- * Log and rethrow errors
- */
 export function logError(message: string, error: unknown, context?: LogContext): never {
   const err = error instanceof Error ? error : new Error(String(error))
   logger.error(message, err, context)
   throw err
 }
 
-/**
- * Safe logging wrapper that catches errors
- */
 export function safeLog(fn: () => void) {
   try {
     fn()
@@ -340,5 +203,4 @@ export function safeLog(fn: () => void) {
   }
 }
 
-// Export default logger
 export default logger

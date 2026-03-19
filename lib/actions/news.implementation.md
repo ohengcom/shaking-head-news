@@ -15,12 +15,7 @@
 
 - ✅ News API: 3600 seconds (1 hour) revalidation
 - ✅ RSS feeds: 1800 seconds (30 minutes) revalidation
-- ✅ Cache tags for granular invalidation:
-  - `news` - All news
-  - `news-${language}` - Language-specific
-  - `news-${source}` - Source-specific
-  - `rss` - All RSS feeds
-  - `rss-${url}` - Specific RSS feed
+- ✅ Cache tags for granular invalidation via short cache keys
 
 #### 3. Error Handling
 
@@ -162,7 +157,7 @@ The news service is ready for integration with:
 
 2. **Environment Variables**: Requires `NEWS_API_BASE_URL` to be set (defaults to `https://news.ravelloh.top`).
 
-3. **Error Monitoring**: All errors are logged to console. In production, integrate with Sentry or similar service.
+3. **Runtime Logging**: Errors are logged with structured context and should be inspected through deployment runtime logs.
 
 4. **Rate Limiting**: Not implemented at this level. Should be added in Task 15 (Security).
 

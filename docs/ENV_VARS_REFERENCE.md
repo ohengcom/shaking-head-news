@@ -1,67 +1,63 @@
-# Environment Variables Reference
+# 环境变量参考
 
-Last Updated: 2026-03-18
-Status: Production Configuration
+最后更新：2026-03-19
 
-The following environment variables reflect the current Auth.js v5, Next.js 16, and Upstash-backed implementation.
+## 认证
 
-## Authentication (Auth.js v5)
+| 变量                                | 必填                  | 说明                               |
+| ----------------------------------- | --------------------- | ---------------------------------- |
+| `AUTH_SECRET`                       | 生产必填              | Auth.js 会话密钥。                 |
+| `AUTH_GOOGLE_ID`                    | 启用 Google 时必填    | Google OAuth Client ID。           |
+| `AUTH_GOOGLE_SECRET`                | 启用 Google 时必填    | Google OAuth Client Secret。       |
+| `AUTH_MICROSOFT_ENTRA_ID_ID`        | 启用 Microsoft 时必填 | Microsoft Entra ID Client ID。     |
+| `AUTH_MICROSOFT_ENTRA_ID_SECRET`    | 启用 Microsoft 时必填 | Microsoft Entra ID Client Secret。 |
+| `AUTH_MICROSOFT_ENTRA_ID_TENANT_ID` | 启用 Microsoft 时必填 | Tenant ID；多租户可用 `common`。   |
 
-| Variable                            | Required           | Description                                        |
-| ----------------------------------- | ------------------ | -------------------------------------------------- |
-| `AUTH_SECRET`                       | Yes                | Secret used to encrypt session cookies and tokens. |
-| `AUTH_GOOGLE_ID`                    | If using Google    | Google OAuth Client ID.                            |
-| `AUTH_GOOGLE_SECRET`                | If using Google    | Google OAuth Client Secret.                        |
-| `AUTH_MICROSOFT_ENTRA_ID_ID`        | If using Microsoft | Microsoft Entra ID Application (Client) ID.        |
-| `AUTH_MICROSOFT_ENTRA_ID_SECRET`    | If using Microsoft | Microsoft Entra ID Client Secret.                  |
-| `AUTH_MICROSOFT_ENTRA_ID_TENANT_ID` | If using Microsoft | Tenant ID, or `common` for multi-tenant.           |
+说明：
 
-Notes:
+- 当前代码优先使用 `AUTH_*` 命名。
+- `NEXTAUTH_SECRET` 仍兼容读取，但只作为过渡回退，不建议继续新增。
+- `NEXTAUTH_URL` 不是当前 App Router 部署的必需项。
 
-- Auth.js v5 prefers the `AUTH_*` prefix.
-- `NEXTAUTH_SECRET` is still accepted by the code as a backward-compatible fallback, but it is no longer the recommended name.
-- `NEXTAUTH_URL` is not required by the current App Router setup. Host detection is derived from request headers.
+## Pro 与权限
 
-## Access Control
+| 变量              | 必填 | 说明                                        |
+| ----------------- | ---- | ------------------------------------------- |
+| `PRO_USER_IDS`    | 否   | 逗号分隔的内部用户 ID，登录后默认视为 Pro。 |
+| `PRO_USER_EMAILS` | 否   | 逗号分隔的邮箱，登录后默认视为 Pro。        |
 
-| Variable          | Required | Description                                                      |
-| ----------------- | -------- | ---------------------------------------------------------------- |
-| `PRO_USER_IDS`    | No       | Comma-separated internal user IDs that should be treated as Pro. |
-| `PRO_USER_EMAILS` | No       | Comma-separated email addresses that should be treated as Pro.   |
+说明：
 
-Notes:
+- 当前阶段产品设定是：任何已登录用户都可以在设置面板里自助切换到 `Pro`。
+- `PRO_USER_IDS` / `PRO_USER_EMAILS` 不是唯一授权入口，也不是白名单机制。
+- 这两个变量只用于预置默认 Pro 身份，方便种子账号或运营账号开箱即用。
 
-- Pro access is server-managed only.
-- Client-side settings can no longer elevate a user to Pro.
+## 存储
 
-## Storage (Upstash Redis)
+| 变量                       | 必填     | 说明                       |
+| -------------------------- | -------- | -------------------------- |
+| `UPSTASH_REDIS_REST_URL`   | 生产必填 | Upstash Redis REST URL。   |
+| `UPSTASH_REDIS_REST_TOKEN` | 生产必填 | Upstash Redis REST Token。 |
 
-| Variable                   | Required          | Description                       |
-| -------------------------- | ----------------- | --------------------------------- |
-| `UPSTASH_REDIS_REST_URL`   | Yes in production | REST API URL for Upstash Redis.   |
-| `UPSTASH_REDIS_REST_TOKEN` | Yes in production | REST API token for Upstash Redis. |
+说明：
 
-Notes:
+- 生产环境缺少 Redis 配置会在启动时直接报错。
+- 开发和测试环境仍可回退到内存存储。
 
-- Redis is mandatory in production. The app intentionally throws during startup if these variables are missing in production.
-- Local development and test environments can still fall back to in-memory storage.
-- `REDIS_URL` may exist in Vercel, but the app does not use it.
+## 应用与可选集成
 
-## App and Integrations
+| 变量                            | 必填     | 说明                                                          |
+| ------------------------------- | -------- | ------------------------------------------------------------- |
+| `NEXT_PUBLIC_APP_URL`           | 建议填写 | 公开站点 URL，用于 metadata 和部署文档约定。                  |
+| `NEWS_API_BASE_URL`             | 建议填写 | 外部新闻 API 基础地址。默认 `https://news.ravelloh.top`。     |
+| `NEXT_PUBLIC_ADSENSE_CLIENT_ID` | 否       | AdSense Client ID；仅在启用广告时使用。                       |
+| `NEXT_PUBLIC_LOG_LEVEL`         | 否       | 前后端控制台日志级别，默认开发环境 `debug`、生产环境 `info`。 |
 
-| Variable                        | Required | Description                                                                |
-| ------------------------------- | -------- | -------------------------------------------------------------------------- |
-| `NEXT_PUBLIC_APP_URL`           | Yes      | Public app base URL used for canonical links and client-side integrations. |
-| `NEWS_API_BASE_URL`             | Yes      | Base URL for the external news provider API.                               |
-| `NEXT_PUBLIC_ADSENSE_CLIENT_ID` | Optional | Google AdSense Publisher ID. Only used when ads are enabled for the user.  |
-
-## Deprecated / Removed
-
-These variables are no longer part of the recommended configuration:
+## 已移除或不再推荐
 
 - `NEXTAUTH_URL`
-- `NEXTAUTH_SECRET`
-- `KV_URL`
-- `KV_REST_API_READ_ONLY_TOKEN`
-- `KV_REST_API_TOKEN`
-- `KV_REST_API_URL`
+- `NEXT_PUBLIC_GA_ID`
+- `NEXT_PUBLIC_SENTRY_DSN`
+- `SENTRY_AUTH_TOKEN`
+
+仓库内已移除监控占位实现；若后续接入外部监控，请按实际方案重新补充文档。

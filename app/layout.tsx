@@ -1,10 +1,12 @@
 import type { Metadata } from 'next'
 import { Inter, Noto_Sans_SC } from 'next/font/google'
-import { cookies } from 'next/headers'
+import { headers } from 'next/headers'
+import Script from 'next/script'
 import { getMessages } from 'next-intl/server'
 import { NextIntlClientProvider } from 'next-intl'
 import './globals.css'
 import { SessionProvider } from '@/components/auth/SessionProvider'
+import { AppRuntimeSettings } from '@/components/layout/AppRuntimeSettings'
 import { Footer } from '@/components/layout/footer'
 import { Header } from '@/components/layout/header'
 import { UIWrapper } from '@/components/layout/UIWrapper'
@@ -13,8 +15,10 @@ import { ThemeProvider } from '@/components/theme-provider'
 import { Toaster } from '@/components/ui/toaster'
 import { UserTierProvider } from '@/hooks/use-user-tier'
 import { getUserSettings } from '@/lib/actions/settings'
+import { env } from '@/lib/env'
 import { getUserTier } from '@/lib/tier-server'
-import { WebVitals } from './web-vitals'
+import { defaultSettings } from '@/types/settings'
+import { resolveRequestLocale } from '@/i18n'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -31,7 +35,10 @@ const notoSansSC = Noto_Sans_SC({
   variable: '--font-noto-sans-sc',
 })
 
+const appUrl = env.NEXT_PUBLIC_APP_URL ?? 'https://shaking-head-news.vercel.app'
+
 export const metadata: Metadata = {
+  metadataBase: new URL(appUrl),
   title: '摇头看新闻 - Shaking Head News',
   description:
     '在浏览新闻的同时，通过页面旋转帮助您改善颈椎健康。A modern web app with daily news and neck health features.',
@@ -41,7 +48,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'zh_CN',
-    url: 'https://shaking-head-news.vercel.app',
+    url: appUrl,
     title: '摇头看新闻',
     description: '在浏览新闻的同时，通过页面旋转帮助您改善颈椎健康',
     siteName: '摇头看新闻',
@@ -58,35 +65,56 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const cookieStore = await cookies()
-  const locale = cookieStore.get('locale')?.value || 'zh'
-  const messages = await getMessages()
-
-  const [initialTier, initialSettings] = await Promise.all([
-    getUserTier().then((result) => result.tier),
+  const [headerStore, locale, initialTierResult, initialSettings, messages] = await Promise.all([
+    headers(),
+    resolveRequestLocale(),
+    getUserTier(),
     getUserSettings().catch(() => null),
+    getMessages(),
   ])
+
+  const nonce = headerStore.get('x-nonce') ?? undefined
+  const initialTier = initialTierResult.tier
+  const runtimeSettings = initialTier === 'guest' ? null : initialSettings
+  const initialTheme = initialSettings?.theme ?? defaultSettings.theme
+  const initialFontSize = initialSettings?.fontSize ?? defaultSettings.fontSize
+  const initialLayoutMode = initialSettings?.layoutMode ?? defaultSettings.layoutMode
+  const initialRotationMode = runtimeSettings?.rotationMode ?? defaultSettings.rotationMode
+  const initialRotationInterval =
+    runtimeSettings?.rotationInterval ?? defaultSettings.rotationInterval
+  const initialAnimationEnabled =
+    runtimeSettings?.animationEnabled ?? defaultSettings.animationEnabled
   const adsEnabled = initialTier !== 'pro' || initialSettings?.adsEnabled !== false
 
   return (
-    <html lang={locale} suppressHydrationWarning>
+    <html
+      lang={locale}
+      data-font-size={initialFontSize}
+      data-layout-mode={initialLayoutMode}
+      suppressHydrationWarning
+    >
       <head>
         <link rel="dns-prefetch" href="https://news.ravelloh.top" />
         <link rel="preconnect" href="https://news.ravelloh.top" crossOrigin="anonymous" />
       </head>
       <body className={`${inter.variable} ${notoSansSC.variable} font-sans`}>
-        <WebVitals />
         <SessionProvider>
           <UserTierProvider initialTier={initialTier}>
             <NextIntlClientProvider messages={messages} locale={locale}>
               <ThemeProvider
                 attribute="class"
-                defaultTheme="system"
+                defaultTheme={initialTheme}
                 enableSystem
                 disableTransitionOnChange
+                nonce={nonce}
               >
+                <AppRuntimeSettings initialSettings={runtimeSettings} />
                 <UIWrapper>
-                  <TiltWrapper>
+                  <TiltWrapper
+                    initialMode={initialRotationMode}
+                    initialInterval={initialRotationInterval}
+                    initialAnimationEnabled={initialAnimationEnabled}
+                  >
                     <div className="flex min-h-screen flex-col">
                       <Header />
                       <main className="flex-1">{children}</main>
@@ -99,10 +127,12 @@ export default async function RootLayout({
             </NextIntlClientProvider>
           </UserTierProvider>
         </SessionProvider>
-        {process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID && adsEnabled && (
-          <script
+        {env.NEXT_PUBLIC_ADSENSE_CLIENT_ID && adsEnabled && (
+          <Script
             async
-            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID}`}
+            strategy="afterInteractive"
+            nonce={nonce}
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${env.NEXT_PUBLIC_ADSENSE_CLIENT_ID}`}
             crossOrigin="anonymous"
           />
         )}

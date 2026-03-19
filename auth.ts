@@ -2,23 +2,20 @@ import { Buffer } from 'buffer'
 import NextAuth from 'next-auth'
 import Google from 'next-auth/providers/google'
 import MicrosoftEntraID from 'next-auth/providers/microsoft-entra-id'
+import { env } from '@/lib/env'
 import {
   buildFallbackUserId,
   ensureInternalUserProfile,
   getSubscriptionTierForUser,
 } from '@/lib/user-profile'
 
-const googleClientId = process.env.AUTH_GOOGLE_ID ?? process.env.GOOGLE_CLIENT_ID
-const googleClientSecret = process.env.AUTH_GOOGLE_SECRET ?? process.env.GOOGLE_CLIENT_SECRET
-const authSecret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET
-
 const providers = []
 
-if (googleClientId && googleClientSecret) {
+if (env.hasGoogleAuth && env.AUTH_GOOGLE_ID && env.AUTH_GOOGLE_SECRET) {
   providers.push(
     Google({
-      clientId: googleClientId,
-      clientSecret: googleClientSecret,
+      clientId: env.AUTH_GOOGLE_ID,
+      clientSecret: env.AUTH_GOOGLE_SECRET,
       authorization: {
         params: {
           prompt: 'consent',
@@ -31,15 +28,16 @@ if (googleClientId && googleClientSecret) {
 }
 
 if (
-  process.env.AUTH_MICROSOFT_ENTRA_ID_ID &&
-  process.env.AUTH_MICROSOFT_ENTRA_ID_SECRET &&
-  process.env.AUTH_MICROSOFT_ENTRA_ID_TENANT_ID
+  env.hasMicrosoftAuth &&
+  env.AUTH_MICROSOFT_ENTRA_ID_ID &&
+  env.AUTH_MICROSOFT_ENTRA_ID_SECRET &&
+  env.AUTH_MICROSOFT_ENTRA_ID_TENANT_ID
 ) {
   providers.push(
     MicrosoftEntraID({
-      clientId: process.env.AUTH_MICROSOFT_ENTRA_ID_ID,
-      clientSecret: process.env.AUTH_MICROSOFT_ENTRA_ID_SECRET,
-      issuer: `https://login.microsoftonline.com/${process.env.AUTH_MICROSOFT_ENTRA_ID_TENANT_ID}/v2.0`,
+      clientId: env.AUTH_MICROSOFT_ENTRA_ID_ID,
+      clientSecret: env.AUTH_MICROSOFT_ENTRA_ID_SECRET,
+      issuer: `https://login.microsoftonline.com/${env.AUTH_MICROSOFT_ENTRA_ID_TENANT_ID}/v2.0`,
       authorization: {
         params: {
           scope: 'openid profile email User.Read',
@@ -48,6 +46,8 @@ if (
     })
   )
 }
+
+export const configuredAuthProviders = providers.map((provider) => provider.id)
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers,
@@ -177,5 +177,5 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     strategy: 'jwt',
   },
   trustHost: true,
-  secret: authSecret,
+  secret: env.AUTH_SECRET,
 })

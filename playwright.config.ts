@@ -19,9 +19,19 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npm run dev',
+    command: 'pnpm run dev',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
+    env: {
+      AUTH_SECRET: 'playwright-auth-secret',
+      AUTH_GOOGLE_ID: 'playwright-google-id',
+      AUTH_GOOGLE_SECRET: 'playwright-google-secret',
+      AUTH_MICROSOFT_ENTRA_ID_ID: 'playwright-microsoft-id',
+      AUTH_MICROSOFT_ENTRA_ID_SECRET: 'playwright-microsoft-secret',
+      AUTH_MICROSOFT_ENTRA_ID_TENANT_ID: 'common',
+      NEXT_PUBLIC_APP_URL: 'http://localhost:3000',
+      NEWS_API_BASE_URL: 'https://news.ravelloh.top',
+    },
   },
 })
