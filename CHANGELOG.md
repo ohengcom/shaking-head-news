@@ -5,6 +5,16 @@ All notable changes to Shaking Head News will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2026.5.7] - 2026-05-07
+
+### Changed
+
+- **Security Maintenance**: Upgraded Next.js to 16.2.5 and aligned Next.js tooling packages.
+- **Internationalization**: Upgraded `next-intl` to 4.11.0.
+- **Parsing and CSS Tooling**: Upgraded `fast-xml-parser` to 5.7.3 and `postcss` to 8.5.14.
+- **Dependency Hygiene**: Added pnpm overrides for patched `postcss` and `picomatch` transitive versions.
+- **Docs**: Synced documented runtime stack and release metadata with the patched dependency set.
+
 ## [2026.3.18] - 2026-03-18
 
 ### Added

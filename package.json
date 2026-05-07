@@ -1,7 +1,7 @@
 {
   "name": "shaking-head-news",
   "description": "Shake your head while watching the news - A modern web app with daily news and neck health features",
-  "version": "2026.3.18",
+  "version": "2026.5.7",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ohengcom/shaking-head-news.git"
@@ -52,16 +52,16 @@
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-toast": "^1.2.15",
     "@swc/helpers": "^0.5.19",
-    "@tailwindcss/postcss": "^4.2.1",
+    "@tailwindcss/postcss": "^4.2.4",
     "@upstash/redis": "^1.37.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "fast-xml-parser": "^5.5.6",
+    "fast-xml-parser": "^5.7.3",
     "framer-motion": "^12.38.0",
     "lucide-react": "^0.577.0",
-    "next": "^16.1.7",
+    "next": "^16.2.5",
     "next-auth": "^5.0.0-beta.30",
-    "next-intl": "^4.8.3",
+    "next-intl": "^4.11.0",
     "next-themes": "^0.4.6",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
@@ -76,8 +76,8 @@
     "@commitlint/config-conventional": "^20.5.0",
     "@eslint/eslintrc": "^3.3.5",
     "@eslint/js": "^10.0.1",
-    "@next/bundle-analyzer": "^16.1.7",
-    "@next/eslint-plugin-next": "^16.1.7",
+    "@next/bundle-analyzer": "^16.2.5",
+    "@next/eslint-plugin-next": "^16.2.5",
     "@playwright/test": "^1.58.2",
     "@types/node": "^25.5.0",
     "@types/react": "^19.2.14",
@@ -85,13 +85,13 @@
     "@typescript-eslint/eslint-plugin": "^8.57.1",
     "@typescript-eslint/parser": "^8.57.1",
     "eslint": "^10.0.3",
-    "eslint-config-next": "^16.1.7",
+    "eslint-config-next": "^16.2.5",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.5",
     "globals": "^17.4.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
-    "postcss": "^8.5.8",
+    "postcss": "^8.5.14",
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
     "tailwindcss": "^4.2.1",
@@ -111,5 +111,18 @@
       "prettier --write"
     ]
   },
-  "overrides": {}
+  "pnpm": {
+    "overrides": {
+      "next>postcss": "8.5.14",
+      "@parcel/watcher>picomatch": "4.0.4",
+      "micromatch>picomatch": "2.3.2",
+      "tinyglobby>picomatch": "4.0.4",
+      "lint-staged>picomatch": "4.0.4",
+      "lint-staged>yaml": "2.8.3",
+      "minimatch@9.0.5": "9.0.7",
+      "brace-expansion@1.1.12": "1.1.13",
+      "brace-expansion@2.0.2": "2.0.3",
+      "brace-expansion@5.0.4": "5.0.5"
+    }
+  }
 }
