@@ -39,6 +39,8 @@
     "types/**/*.d.ts",
     "config/**/*.ts",
     "auth.ts",
+    "i18n.ts",
+    "i18n/**/*.ts",
     "proxy.ts",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"

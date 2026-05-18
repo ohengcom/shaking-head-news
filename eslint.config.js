@@ -1,15 +1,14 @@
 import js from '@eslint/js'
-import tsParser from '@typescript-eslint/parser'
-import tsPlugin from '@typescript-eslint/eslint-plugin'
+import tseslint from 'typescript-eslint'
 import globals from 'globals'
 import nextPlugin from '@next/eslint-plugin-next'
 
-export default [
+export default tseslint.config(
   js.configs.recommended,
+  ...tseslint.configs.recommended,
   {
     files: ['**/*.{ts,tsx}'],
     languageOptions: {
-      parser: tsParser,
       parserOptions: {
         ecmaVersion: 'latest',
         sourceType: 'module',
@@ -26,7 +25,6 @@ export default [
       },
     },
     plugins: {
-      '@typescript-eslint': tsPlugin,
       '@next/next': nextPlugin,
     },
     rules: {
@@ -53,6 +51,7 @@ export default [
       'public/**',
       '*.config.js',
       '*.config.ts',
+      '*.config.mjs',
     ],
-  },
-]
+  }
+)

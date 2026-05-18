@@ -1,5 +1,4 @@
 import { cookies } from 'next/headers'
-import { getRequestConfig } from 'next-intl/server'
 import { auth } from '@/auth'
 import { getStorageItem, StorageKeys } from '@/lib/storage'
 import type { UserSettings } from '@/types/settings'
@@ -22,12 +21,3 @@ export async function resolveRequestLocale(): Promise<'zh' | 'en'> {
   const cookieStore = await cookies()
   return cookieStore.get('locale')?.value === 'en' ? 'en' : DEFAULT_LOCALE
 }
-
-export default getRequestConfig(async () => {
-  const locale = await resolveRequestLocale()
-
-  return {
-    locale,
-    messages: (await import(`./messages/${locale}.json`)).default,
-  }
-})

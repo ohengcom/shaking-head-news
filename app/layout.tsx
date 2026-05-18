@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import type { ReactNode } from 'react'
 import { Inter, Noto_Sans_SC } from 'next/font/google'
 import { headers } from 'next/headers'
 import { getMessages } from 'next-intl/server'
@@ -29,7 +30,7 @@ const inter = Inter({
 const notoSansSC = Noto_Sans_SC({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
-  display: 'optional',
+  display: 'swap',
   preload: false,
   variable: '--font-noto-sans-sc',
 })
@@ -62,7 +63,7 @@ export const metadata: Metadata = {
 export default async function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode
+  children: ReactNode
 }>) {
   const [headerStore, locale, initialTierResult, initialSettings, messages] = await Promise.all([
     headers(),
