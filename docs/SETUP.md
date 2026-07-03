@@ -1,11 +1,12 @@
 # 本地设置
 
-最后更新：2026-03-19
+最后更新：2026-07-03
 
 ## 1. 安装依赖
 
 ```bash
-pnpm install
+corepack enable
+corepack pnpm install
 ```
 
 ## 2. 复制环境变量
@@ -54,10 +55,15 @@ NEXT_PUBLIC_ADSENSE_CLIENT_ID=
 ## 4. 启动开发环境
 
 ```bash
-pnpm run dev
+corepack pnpm run dev
 ```
 
 访问 `http://localhost:3000`。
+
+Windows 说明：
+
+- 如果仓库位于 OneDrive 目录，`pnpm` 可能出现链接异常或极慢的类型检查。
+- 建议把可运行副本放在普通本地路径，例如 `C:\temp\shaking-head-news`。
 
 ## 5. 本地核对项
 

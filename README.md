@@ -38,14 +38,14 @@
 
 ## 🛠️ 技术栈 (Tech Stack)
 
-- **Framework**: Next.js 16.2 (App Router, Turbopack)
+- **Framework**: Next.js 16.2.10 (App Router, Turbopack)
 - **UI**: React 19, Tailwind CSS 4, Shadcn/ui, Framer Motion
 - **Data**: Zustand (State), Upstash Redis (Storage), NextAuth.js v5 (Auth)
-- **Quality**: TypeScript 5.9, ESLint 10, React Compiler
+- **Quality**: TypeScript 6, ESLint 10, React Compiler
 
 ## 🚦 快速开始 (Quick Start)
 
-> Requires `Node.js 24.x` and `pnpm 10.x` (managed via `corepack`).
+> Requires `Node.js 24.x` and `pnpm 10.32.x` (managed via `corepack`).
 
 **1. 克隆与安装**
 
@@ -53,7 +53,7 @@
 git clone https://github.com/ohengcom/shaking-head-news.git
 cd shaking-head-news
 corepack enable
-pnpm install
+corepack pnpm install
 ```
 
 **2. 环境配置**
@@ -63,9 +63,11 @@ pnpm install
 **3. 启动开发**
 
 ```bash
-pnpm run dev
+corepack pnpm run dev
 # 访问 http://localhost:3000
 ```
+
+Windows note: if your repo lives under OneDrive, install and run the app from a normal local path such as `C:\temp\shaking-head-news` to avoid pnpm link issues.
 
 ## 📚 文档
 

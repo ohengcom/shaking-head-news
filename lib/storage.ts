@@ -1,36 +1,54 @@
 import { Redis } from '@upstash/redis'
-import { env } from '@/lib/env'
+import { getEnv } from '@/lib/env'
 
-const redisUrl = env.UPSTASH_REDIS_REST_URL
-const redisToken = env.UPSTASH_REDIS_REST_TOKEN
 const STORAGE_REQUEST_TIMEOUT_MS = 1500
-
-const isRedisConfigured = Boolean(redisUrl && redisToken)
-
-if (!isRedisConfigured) {
-  if (env.isProduction) {
-    throw new Error(
-      'Upstash Redis is required in production. Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN.'
-    )
-  }
-
-  console.warn('[Storage] Redis not configured, using in-memory storage (data will not persist)')
-}
 
 // In-memory fallback used in development and tests only.
 const memoryStorage = new Map<string, { value: unknown; expiry?: number }>()
+let storage: Redis | null | undefined
+let warnedAboutMemoryStorage = false
 
-export const storage = isRedisConfigured
-  ? new Redis({
-      url: redisUrl,
-      token: redisToken,
-      retry: false,
-      signal: () => AbortSignal.timeout(STORAGE_REQUEST_TIMEOUT_MS),
-    })
-  : null
+export function getRedisStorage(): Redis | null {
+  if (storage !== undefined) {
+    return storage
+  }
+
+  const env = getEnv()
+  const redisUrl = env.UPSTASH_REDIS_REST_URL
+  const redisToken = env.UPSTASH_REDIS_REST_TOKEN
+  const isRedisConfigured = Boolean(redisUrl && redisToken)
+
+  if (!isRedisConfigured) {
+    if (env.isProduction) {
+      throw new Error(
+        'Upstash Redis is required in production. Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN.'
+      )
+    }
+
+    if (!warnedAboutMemoryStorage) {
+      warnedAboutMemoryStorage = true
+      console.warn(
+        '[Storage] Redis not configured, using in-memory storage (data will not persist)'
+      )
+    }
+
+    storage = null
+    return storage
+  }
+
+  storage = new Redis({
+    url: redisUrl,
+    token: redisToken,
+    retry: false,
+    signal: () => AbortSignal.timeout(STORAGE_REQUEST_TIMEOUT_MS),
+  })
+
+  return storage
+}
 
 export async function getStorageItem<T>(key: string): Promise<T | null> {
   try {
+    const storage = getRedisStorage()
     if (storage) {
       return await storage.get<T>(key)
     }
@@ -58,6 +76,7 @@ export async function setStorageItem<T>(
   expirationSeconds?: number
 ): Promise<void> {
   try {
+    const storage = getRedisStorage()
     if (storage) {
       if (expirationSeconds) {
         await storage.set(key, value, { ex: expirationSeconds })
@@ -77,6 +96,7 @@ export async function setStorageItem<T>(
 
 export async function deleteStorageItem(key: string): Promise<void> {
   try {
+    const storage = getRedisStorage()
     if (storage) {
       await storage.del(key)
       return
@@ -91,6 +111,7 @@ export async function deleteStorageItem(key: string): Promise<void> {
 
 export async function getMultipleStorageItems(keys: string[]): Promise<unknown[]> {
   try {
+    const storage = getRedisStorage()
     if (storage) {
       return await storage.mget(...keys)
     }
@@ -116,6 +137,7 @@ export async function getMultipleStorageItems(keys: string[]): Promise<unknown[]
 
 export async function getTTL(key: string): Promise<number> {
   try {
+    const storage = getRedisStorage()
     if (storage) {
       return await storage.ttl(key)
     }
@@ -139,6 +161,7 @@ export async function setStorageItemWithOptions<T>(
   options?: { ex?: number; keepTtl?: boolean }
 ): Promise<void> {
   try {
+    const storage = getRedisStorage()
     if (storage) {
       if (options?.keepTtl) {
         await storage.set(key, value, { keepTtl: true })

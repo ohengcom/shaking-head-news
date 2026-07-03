@@ -5,6 +5,21 @@ All notable changes to Shaking Head News will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2026.7.3] - 2026-07-03
+
+### Changed
+
+- **Stack Refresh**: Upgraded Next.js to 16.2.10, React to 19.2.7, Tailwind CSS to 4.3.2, and aligned the surrounding UI/tooling packages with current patches.
+- **Build Tooling**: Switched bundle analysis to Next.js built-in `experimental-analyze` and removed redundant Turbopack dev-cache config.
+- **Local Tooling**: Aligned project metadata and CI with the pinned `pnpm` toolchain and documented safer Windows setup guidance.
+
+### Fixed
+
+- **Build Safety**: Deferred environment and Redis initialization so App Router builds do not eagerly depend on runtime storage configuration.
+- **Server Boundaries**: Added authentication and rate limiting to refresh Server Actions and hid guest-only refresh controls that no longer match server policy.
+- **Rotation API Semantics**: `/api/stats/rotation` now returns accurate HTTP status codes for unauthorized, rate-limited, and internal-error cases.
+- **Cross-Platform Formatting**: Added `.gitattributes` so LF formatting stays stable across Windows and CI.
+
 ## [2026.5.7] - 2026-05-07
 
 ### Changed

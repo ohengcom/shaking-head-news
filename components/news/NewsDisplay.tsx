@@ -37,12 +37,14 @@ async function NewsContent({ language = 'zh', source }: NewsDisplayProps) {
 
 export async function NewsDisplay({ language = 'zh', source }: NewsDisplayProps) {
   const t = await getTranslations('news')
+  const session = await auth()
+  const canRefresh = Boolean(session?.user?.id)
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold">{t('title')}</h1>
-        <RefreshButton language={language} source={source} />
+        {canRefresh ? <RefreshButton language={language} source={source} /> : null}
       </div>
 
       <Suspense fallback={<NewsListSkeleton />}>

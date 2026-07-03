@@ -6,7 +6,7 @@
  */
 
 import {
-  storage,
+  getRedisStorage,
   getStorageItem,
   setStorageItemWithOptions,
   deleteStorageItem,
@@ -63,6 +63,8 @@ export async function rateLimit(
   const key = `${prefix}:${identifier}`
 
   try {
+    const storage = getRedisStorage()
+
     // Use atomic INCR when Redis is available (eliminates race condition)
     if (storage) {
       const count = await storage.incr(key)

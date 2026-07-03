@@ -1,6 +1,6 @@
 # 部署指南
 
-最后更新：2026-03-19
+最后更新：2026-07-03
 
 ## 前提
 
@@ -60,7 +60,7 @@ Microsoft Entra ID：
 - Build Command: `pnpm run build`
 - Install Command: `pnpm install`
 - Node.js: `24.x`
-- Package Manager: `pnpm 10.x`
+- Package Manager: `pnpm 10.32.1`
 
 ## 部署后核对
 

@@ -28,7 +28,26 @@ export async function POST(request: Request) {
       return new Response(null, { status: 400 })
     }
 
-    await recordRotation(parsed.data.angle, parsed.data.duration, parsed.data.count ?? 1)
+    const result = await recordRotation(
+      parsed.data.angle,
+      parsed.data.duration,
+      parsed.data.count ?? 1
+    )
+
+    if (result && typeof result === 'object' && 'error' in result) {
+      const errorCode = result.error
+
+      if (errorCode === 'UNAUTHORIZED') {
+        return new Response(null, { status: 401 })
+      }
+
+      if (errorCode === 'RATE_LIMIT') {
+        return new Response(null, { status: 429 })
+      }
+
+      return new Response(null, { status: 500 })
+    }
+
     return new Response(null, { status: 204 })
   } catch {
     return new Response(null, { status: 500 })

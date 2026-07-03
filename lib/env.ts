@@ -70,56 +70,100 @@ const envSchema = z
         path: ['AUTH_MICROSOFT_ENTRA_ID_ID'],
       })
     }
-
-    if (
-      value.NODE_ENV === 'production' &&
-      (!value.UPSTASH_REDIS_REST_URL || !value.UPSTASH_REDIS_REST_TOKEN)
-    ) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are required in production.',
-        path: ['UPSTASH_REDIS_REST_URL'],
-      })
-    }
   })
 
-const parsedEnv = envSchema.safeParse(process.env)
+type EnvData = z.infer<typeof envSchema>
 
-if (!parsedEnv.success) {
-  const issues = parsedEnv.error.issues
-    .map((issue) => `${issue.path.join('.') || 'env'}: ${issue.message}`)
-    .join('\n')
-
-  throw new Error(`Invalid environment configuration:\n${issues}`)
+type ResolvedEnv = {
+  NODE_ENV: EnvData['NODE_ENV']
+  AUTH_SECRET: string | undefined
+  AUTH_GOOGLE_ID: string | undefined
+  AUTH_GOOGLE_SECRET: string | undefined
+  AUTH_MICROSOFT_ENTRA_ID_ID: string | undefined
+  AUTH_MICROSOFT_ENTRA_ID_SECRET: string | undefined
+  AUTH_MICROSOFT_ENTRA_ID_TENANT_ID: string | undefined
+  UPSTASH_REDIS_REST_URL: string | undefined
+  UPSTASH_REDIS_REST_TOKEN: string | undefined
+  NEXT_PUBLIC_APP_URL: string | undefined
+  NEXT_PUBLIC_ADSENSE_CLIENT_ID: string | undefined
+  NEWS_API_BASE_URL: string
+  PRO_USER_IDS: string | undefined
+  PRO_USER_EMAILS: string | undefined
+  isProduction: boolean
+  isDevelopment: boolean
+  hasGoogleAuth: boolean
+  hasMicrosoftAuth: boolean
 }
 
-const data = parsedEnv.data
+let cachedEnv: Readonly<ResolvedEnv> | null = null
 
-const authSecret = data.AUTH_SECRET ?? data.NEXTAUTH_SECRET
-const googleClientId = data.AUTH_GOOGLE_ID ?? data.GOOGLE_CLIENT_ID
-const googleClientSecret = data.AUTH_GOOGLE_SECRET ?? data.GOOGLE_CLIENT_SECRET
+function resolveEnv(): Readonly<ResolvedEnv> {
+  if (cachedEnv) {
+    return cachedEnv
+  }
 
-export const env = {
-  NODE_ENV: data.NODE_ENV,
-  AUTH_SECRET: authSecret,
-  AUTH_GOOGLE_ID: googleClientId,
-  AUTH_GOOGLE_SECRET: googleClientSecret,
-  AUTH_MICROSOFT_ENTRA_ID_ID: data.AUTH_MICROSOFT_ENTRA_ID_ID,
-  AUTH_MICROSOFT_ENTRA_ID_SECRET: data.AUTH_MICROSOFT_ENTRA_ID_SECRET,
-  AUTH_MICROSOFT_ENTRA_ID_TENANT_ID: data.AUTH_MICROSOFT_ENTRA_ID_TENANT_ID,
-  UPSTASH_REDIS_REST_URL: data.UPSTASH_REDIS_REST_URL,
-  UPSTASH_REDIS_REST_TOKEN: data.UPSTASH_REDIS_REST_TOKEN,
-  NEXT_PUBLIC_APP_URL: data.NEXT_PUBLIC_APP_URL,
-  NEXT_PUBLIC_ADSENSE_CLIENT_ID: data.NEXT_PUBLIC_ADSENSE_CLIENT_ID,
-  NEWS_API_BASE_URL: data.NEWS_API_BASE_URL ?? 'https://news.ravelloh.top',
-  PRO_USER_IDS: data.PRO_USER_IDS,
-  PRO_USER_EMAILS: data.PRO_USER_EMAILS,
-  isProduction: data.NODE_ENV === 'production',
-  isDevelopment: data.NODE_ENV === 'development',
-  hasGoogleAuth: Boolean(googleClientId && googleClientSecret),
-  hasMicrosoftAuth: Boolean(
-    data.AUTH_MICROSOFT_ENTRA_ID_ID &&
-    data.AUTH_MICROSOFT_ENTRA_ID_SECRET &&
-    data.AUTH_MICROSOFT_ENTRA_ID_TENANT_ID
-  ),
-} as const
+  const parsedEnv = envSchema.safeParse(process.env)
+
+  if (!parsedEnv.success) {
+    const issues = parsedEnv.error.issues
+      .map((issue) => `${issue.path.join('.') || 'env'}: ${issue.message}`)
+      .join('\n')
+
+    throw new Error(`Invalid environment configuration:\n${issues}`)
+  }
+
+  const data = parsedEnv.data
+  const authSecret = data.AUTH_SECRET ?? data.NEXTAUTH_SECRET
+  const googleClientId = data.AUTH_GOOGLE_ID ?? data.GOOGLE_CLIENT_ID
+  const googleClientSecret = data.AUTH_GOOGLE_SECRET ?? data.GOOGLE_CLIENT_SECRET
+
+  cachedEnv = {
+    NODE_ENV: data.NODE_ENV,
+    AUTH_SECRET: authSecret,
+    AUTH_GOOGLE_ID: googleClientId,
+    AUTH_GOOGLE_SECRET: googleClientSecret,
+    AUTH_MICROSOFT_ENTRA_ID_ID: data.AUTH_MICROSOFT_ENTRA_ID_ID,
+    AUTH_MICROSOFT_ENTRA_ID_SECRET: data.AUTH_MICROSOFT_ENTRA_ID_SECRET,
+    AUTH_MICROSOFT_ENTRA_ID_TENANT_ID: data.AUTH_MICROSOFT_ENTRA_ID_TENANT_ID,
+    UPSTASH_REDIS_REST_URL: data.UPSTASH_REDIS_REST_URL,
+    UPSTASH_REDIS_REST_TOKEN: data.UPSTASH_REDIS_REST_TOKEN,
+    NEXT_PUBLIC_APP_URL: data.NEXT_PUBLIC_APP_URL,
+    NEXT_PUBLIC_ADSENSE_CLIENT_ID: data.NEXT_PUBLIC_ADSENSE_CLIENT_ID,
+    NEWS_API_BASE_URL: data.NEWS_API_BASE_URL ?? 'https://news.ravelloh.top',
+    PRO_USER_IDS: data.PRO_USER_IDS,
+    PRO_USER_EMAILS: data.PRO_USER_EMAILS,
+    isProduction: data.NODE_ENV === 'production',
+    isDevelopment: data.NODE_ENV === 'development',
+    hasGoogleAuth: Boolean(googleClientId && googleClientSecret),
+    hasMicrosoftAuth: Boolean(
+      data.AUTH_MICROSOFT_ENTRA_ID_ID &&
+      data.AUTH_MICROSOFT_ENTRA_ID_SECRET &&
+      data.AUTH_MICROSOFT_ENTRA_ID_TENANT_ID
+    ),
+  }
+
+  return cachedEnv
+}
+
+export function getEnv(): Readonly<ResolvedEnv> {
+  return resolveEnv()
+}
+
+export const env = new Proxy({} as Readonly<ResolvedEnv>, {
+  get(_target, property: string | symbol) {
+    return (resolveEnv() as Record<string | symbol, unknown>)[property]
+  },
+  has(_target, property: string | symbol) {
+    return property in resolveEnv()
+  },
+  ownKeys() {
+    return Reflect.ownKeys(resolveEnv())
+  },
+  getOwnPropertyDescriptor(_target, property: string | symbol) {
+    return {
+      configurable: true,
+      enumerable: true,
+      value: (resolveEnv() as Record<string | symbol, unknown>)[property],
+    }
+  },
+})

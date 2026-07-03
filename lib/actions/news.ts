@@ -11,14 +11,22 @@ import { getHotList } from '@/lib/api/hot-list'
 import { fetchTrending, type TrendingItem } from '@/lib/api/trending'
 import { CacheKeys, CacheTags } from '@/lib/cache-keys'
 import { env } from '@/lib/env'
+import { rateLimitByAction, RateLimitTiers } from '@/lib/rate-limit'
 import { deleteStorageItem, getStorageItem, setStorageItem } from '@/lib/storage'
+import { getUserTier } from '@/lib/tier-server'
 import {
   RawNewsResponseSchema,
   NewsItemSchema,
   type NewsItem,
   type NewsResponse,
 } from '@/types/news'
-import { logError, retryWithBackoff, validateOrThrow } from '@/lib/utils/error-handler'
+import {
+  AuthError,
+  RateLimitError,
+  logError,
+  retryWithBackoff,
+  validateOrThrow,
+} from '@/lib/utils/error-handler'
 import { fetchExternalJson, fetchExternalText } from '@/lib/utils/external-fetch'
 import { type RSSSource } from '@/types/rss'
 
@@ -36,6 +44,36 @@ const NEWS_RETRY_OPTIONS = {
 }
 const RSS_RETRY_OPTIONS = {
   maxRetries: 0,
+}
+
+async function requireAuthenticatedRefresh(
+  action: string,
+  options = RateLimitTiers.RELAXED
+): Promise<string> {
+  const session = await auth()
+
+  if (!session?.user?.id) {
+    throw new AuthError('Please sign in to refresh content')
+  }
+
+  const rateLimitResult = await rateLimitByAction(session.user.id, action, options)
+
+  if (!rateLimitResult.success) {
+    throw new RateLimitError('Too many refresh attempts. Please try again later.')
+  }
+
+  return session.user.id
+}
+
+async function requireCustomRssRefreshAccess(action: string): Promise<string> {
+  const userId = await requireAuthenticatedRefresh(action)
+  const { features } = await getUserTier()
+
+  if (!features.customRssEnabled) {
+    throw new AuthError('Custom RSS requires Pro subscription')
+  }
+
+  return userId
 }
 
 const RSSFeedSnapshotSchema = z.object({
@@ -175,6 +213,7 @@ export async function getNews(
 
 export async function refreshNews(language?: 'zh' | 'en', source?: string) {
   try {
+    await requireAuthenticatedRefresh('refresh-news')
     if (source) {
       revalidateTag(CacheTags.newsSource(source), 'max')
     } else if (language) {
@@ -440,6 +479,7 @@ export async function getRSSNews(rssUrl: string): Promise<NewsItem[]> {
 
 export async function refreshRSSFeed(rssUrl: string) {
   try {
+    await requireCustomRssRefreshAccess('refresh-rss-feed')
     await deleteStorageItem(CacheKeys.rssFeedSnapshot(rssUrl))
     revalidateTag(CacheTags.rssFeed(rssUrl), 'max')
     return { success: true }
@@ -454,6 +494,7 @@ export async function refreshRSSFeed(rssUrl: string) {
 
 export async function refreshRSSCache() {
   try {
+    await requireCustomRssRefreshAccess('refresh-rss-cache')
     const rssSources = await getRSSSources().catch(() => [])
     await Promise.all(
       rssSources.map((source) => deleteStorageItem(CacheKeys.rssFeedSnapshot(source.url)))
@@ -470,6 +511,7 @@ export async function refreshRSSCache() {
 
 export async function refreshHotList(sourceId?: string) {
   try {
+    await requireAuthenticatedRefresh('refresh-hot-list')
     if (sourceId) {
       revalidateTag(CacheTags.hotListSource(sourceId), 'max')
     } else {
