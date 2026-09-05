@@ -30,7 +30,7 @@ import {
 import { fetchExternalJson, fetchExternalText } from '@/lib/utils/external-fetch'
 import { type RSSSource } from '@/types/rss'
 
-const NEWS_API_BASE_URL = env.NEWS_API_BASE_URL
+const getNewsApiBaseUrl = () => env.NEWS_API_BASE_URL
 const DEFAULT_REVALIDATE = 3600
 const RSS_REVALIDATE = 1800
 const RSS_SNAPSHOT_TTL_SECONDS = 60 * 60 * 24
@@ -156,9 +156,10 @@ export async function getNews(
   language: 'zh' | 'en' = 'zh',
   source?: string
 ): Promise<NewsResponse> {
+  const apiBaseUrl = getNewsApiBaseUrl()
   const url = source
-    ? `${NEWS_API_BASE_URL}/${source}.json?lang=${language}`
-    : `${NEWS_API_BASE_URL}/latest.json?lang=${language}`
+    ? `${apiBaseUrl}/${source}.json?lang=${language}`
+    : `${apiBaseUrl}/latest.json?lang=${language}`
 
   try {
     const validatedRawData = await retryWithBackoff(

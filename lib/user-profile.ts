@@ -42,9 +42,6 @@ function parseEnvList(value?: string): Set<string> {
   )
 }
 
-const proUserIds = parseEnvList(env.PRO_USER_IDS)
-const proUserEmails = parseEnvList(env.PRO_USER_EMAILS)
-
 function normalizeEmail(email?: string | null): string | undefined {
   if (!email) {
     return undefined
@@ -73,6 +70,8 @@ export function buildFallbackUserId({
 
 function getEnvSubscriptionTier(userId: string, email?: string | null): SubscriptionTier | null {
   const normalizedEmail = email ? email.toLowerCase() : undefined
+  const proUserIds = parseEnvList(env.PRO_USER_IDS)
+  const proUserEmails = parseEnvList(env.PRO_USER_EMAILS)
 
   if (proUserIds.has(userId.toLowerCase())) {
     return 'pro'

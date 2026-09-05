@@ -45,7 +45,9 @@ const envSchema = z
       value.AUTH_MICROSOFT_ENTRA_ID_TENANT_ID,
     ]
 
-    if (value.NODE_ENV === 'production' && !resolvedAuthSecret) {
+    const isBuildPhase = process.env.NEXT_PHASE === 'phase-production-build'
+
+    if (value.NODE_ENV === 'production' && !isBuildPhase && !resolvedAuthSecret) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
         message: 'AUTH_SECRET is required in production.',
