@@ -33,8 +33,12 @@ export const useRotationStore = create<RotationState>()(
     {
       name: 'rotation-storage',
       // Skip automatic hydration for SSR compatibility
-      // Manual rehydration is triggered in TiltWrapper after mount
+      // Manual rehydration is triggered in AppRuntimeSettings after mount
       skipHydration: true,
+      // Only persist preferences; `angle` changes on every rotation tick and
+      // mousemove, and `isPaused` is session-scoped, so persisting either would
+      // hammer localStorage and restore a tilted page on reload.
+      partialize: (state) => ({ mode: state.mode, interval: state.interval }),
     }
   )
 )

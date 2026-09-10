@@ -30,7 +30,7 @@ export function TiltWrapper({
   const { angle, setAngle, isPaused, mode, interval } = useRotationStore()
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
   const [isHydrated, setIsHydrated] = useState(false)
-  const lastRotationTime = useRef<number>(Date.now())
+  const lastRotationTime = useRef<number>(0)
   const previousAngle = useRef<number>(0)
   const pendingRotations = useRef<PendingRotation[]>([])
   const pathname = usePathname()
@@ -127,6 +127,8 @@ export function TiltWrapper({
     if (effectiveIsPaused || effectiveMode === 'fixed' || prefersReducedMotion || isSettingsPage) {
       return
     }
+
+    lastRotationTime.current = Date.now()
 
     const timer = setInterval(() => {
       const angleMagnitude = Math.random() * 15 + 5

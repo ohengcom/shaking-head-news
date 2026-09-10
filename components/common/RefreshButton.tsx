@@ -5,17 +5,26 @@ import { RotateCw } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useTransition } from 'react'
 import { useTranslations } from 'next-intl'
-import { refreshHotList, refreshRSSCache } from '@/lib/actions/news'
+import { refreshHotList, refreshNews, refreshRSSCache } from '@/lib/actions/news'
+import { useToast } from '@/hooks/use-toast'
 
 interface RefreshButtonProps {
-  scope?: 'router' | 'rss' | 'hotlist'
+  scope?: 'router' | 'rss' | 'hotlist' | 'news'
   sourceId?: string
+  language?: 'zh' | 'en'
+  source?: string
 }
 
-export function RefreshButton({ scope = 'router', sourceId }: RefreshButtonProps) {
+export function RefreshButton({
+  scope = 'router',
+  sourceId,
+  language,
+  source,
+}: RefreshButtonProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const t = useTranslations('news')
+  const { toast } = useToast()
 
   const handleRefresh = () => {
     startTransition(async () => {
@@ -24,9 +33,16 @@ export function RefreshButton({ scope = 'router', sourceId }: RefreshButtonProps
           await refreshRSSCache()
         } else if (scope === 'hotlist') {
           await refreshHotList(sourceId)
+        } else if (scope === 'news') {
+          await refreshNews(language, source)
         }
       } catch (error) {
-        console.error('Failed to refresh content:', error)
+        toast({
+          title: t('refreshFailed'),
+          description:
+            error instanceof Error && error.message ? error.message : t('refreshFailedDescription'),
+          variant: 'destructive',
+        })
       } finally {
         router.refresh()
       }
