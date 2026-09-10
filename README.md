@@ -9,8 +9,8 @@
 </p>
 
 [![License](https://img.shields.io/badge/license-MPL--2.0-blue.svg)](LICENSE)
-[![Next.js](https://img.shields.io/badge/Next.js-16.2-black)](https://nextjs.org/)
-[![React](https://img.shields.io/badge/React-19.2-blue)](https://react.dev/)
+[![Next.js](https://img.shields.io/badge/Next.js-16.3-black)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19.3-blue)](https://react.dev/)
 
 [**🌐 在线演示 (Demo)**](https://024812.xyz)
 
@@ -38,8 +38,8 @@
 
 ## 🛠️ 技术栈 (Tech Stack)
 
-- **Framework**: Next.js 16.2.10 (App Router, Turbopack)
-- **UI**: React 19, Tailwind CSS 4, Shadcn/ui, Framer Motion
+- **Framework**: Next.js 16.3.4 (App Router, Turbopack)
+- **UI**: React 19.3, Tailwind CSS 4, Shadcn/ui, Framer Motion 13
 - **Data**: Zustand (State), Upstash Redis (Storage), NextAuth.js v5 (Auth)
 - **Quality**: TypeScript 6, ESLint 10, React Compiler
 

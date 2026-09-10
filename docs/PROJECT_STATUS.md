@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-- 运行栈：Next.js 16.2、React 19、Auth.js v5、next-intl 4.11、Zustand 5、Upstash Redis。
+- 运行栈：Next.js 16.3、React 19、Auth.js v5、next-intl 4.14、Zustand 5、Upstash Redis。
 - 当前阶段规则：登录用户可直接自助切换 `Pro`。
 - 生产环境要求：必须配置 Upstash Redis。
 
