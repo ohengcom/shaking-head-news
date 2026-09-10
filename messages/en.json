@@ -9,7 +9,11 @@
     "confirm": "Confirm",
     "delete": "Delete",
     "edit": "Edit",
-    "close": "Close"
+    "close": "Close",
+    "unknownError": "An unknown error occurred. Please try again later.",
+    "errorId": "Error ID",
+    "backToHome": "Back to Home",
+    "reset": "Reset"
   },
   "nav": {
     "home": "Home",
@@ -64,7 +68,12 @@
     "publishedAt": "Published at",
     "category": "Category",
     "error": "Failed to load news",
-    "retryLoad": "Reload"
+    "retryLoad": "Reload",
+    "noNewsDescription": "There is no news to display right now. Please try again later or refresh the page.",
+    "loginForMore": "Log in for more news content",
+    "loginNow": "Log In Now",
+    "refreshFailed": "Failed to refresh",
+    "refreshFailedDescription": "Please try again later"
   },
   "settings": {
     "title": "Settings",
@@ -105,7 +114,23 @@
     "saveSuccess": "Settings Saved",
     "saveSuccessDescription": "Your preferences have been successfully updated",
     "saveError": "Save Failed",
-    "saveErrorDescription": "Please try again later"
+    "saveErrorDescription": "Please try again later",
+    "newsContent": "News Content",
+    "newsContentDescription": "Choose the news sources you're interested in",
+    "pendingSources": "To Add ({count})",
+    "allSourcesAdded": "All sources added",
+    "enabledSources": "Enabled ({count}) - Drag to reorder",
+    "addSourcesFromLeft": "Add news sources from the left",
+    "proFeaturesTitle": "Pro Features",
+    "proActivatedTitle": "Pro Activated",
+    "proActivateDescription": "Activate Pro with one click to unlock custom RSS, full statistics, health reminders, and an ad-free experience.",
+    "rssManagement": "RSS Subscriptions",
+    "rssManagementDescription": "Add or remove custom RSS news sources",
+    "manageSubscriptions": "Manage Subscriptions",
+    "adsSettings": "Ad Settings",
+    "adsSettingsDescription": "Manage your ad display preferences",
+    "showAds": "Show Ads",
+    "showAdsDescription": "Ads will no longer be shown once disabled"
   },
   "rotation": {
     "pause": "Pause",
@@ -279,7 +304,15 @@
       "exerciseGoalsEnabled": "Exercise Goals",
       "keyboardShortcutsEnabled": "Keyboard Shortcuts",
       "cloudSyncEnabled": "Cloud Sync"
-    }
+    },
+    "proLoginRequired": "Sign in required",
+    "proLoginRequiredDesc": "Please sign in before toggling Pro access.",
+    "toggleFailed": "Toggle failed",
+    "toggleFailedDesc": "Could not update Pro status for this account.",
+    "proActivated": "Pro activated",
+    "proActivatedDesc": "Pro features are now unlocked for this account.",
+    "revertedToMember": "Reverted to Member",
+    "revertedToMemberDesc": "This account is back to Member privileges."
   },
   "features": {
     "title": "Feature Comparison",
@@ -378,5 +411,14 @@
     "noCustomFeeds": "No Custom Feeds",
     "noCustomFeedsDescription": "You haven't added any custom RSS feeds yet, or they have no content. Go to Settings to add them.",
     "itNewsAi": "IT News (AI)"
+  },
+  "dailyBrief": {
+    "title": "Daily Brief",
+    "readOriginal": "Read Original",
+    "aiTitle": "AI News",
+    "aiDescription": "Latest updates in Artificial Intelligence",
+    "trending": "Trending",
+    "trendingLoginPrompt": "Login to see full trending list",
+    "loginNow": "Login Now"
   }
 }

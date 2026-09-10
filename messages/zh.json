@@ -9,7 +9,11 @@
     "confirm": "确认",
     "delete": "删除",
     "edit": "编辑",
-    "close": "关闭"
+    "close": "关闭",
+    "unknownError": "发生了未知错误，请稍后重试",
+    "errorId": "错误ID",
+    "backToHome": "返回首页",
+    "reset": "重置"
   },
   "nav": {
     "home": "首页",
@@ -64,7 +68,12 @@
     "publishedAt": "发布于",
     "category": "分类",
     "error": "加载新闻失败",
-    "retryLoad": "重新加载"
+    "retryLoad": "重新加载",
+    "noNewsDescription": "当前没有可显示的新闻内容，请稍后再试或刷新页面。",
+    "loginForMore": "登录获取更多新闻内容",
+    "loginNow": "立即登录",
+    "refreshFailed": "刷新失败",
+    "refreshFailedDescription": "请稍后重试"
   },
   "settings": {
     "title": "设置",
@@ -105,7 +114,23 @@
     "saveSuccess": "设置已保存",
     "saveSuccessDescription": "您的偏好设置已成功更新",
     "saveError": "保存失败",
-    "saveErrorDescription": "请稍后重试"
+    "saveErrorDescription": "请稍后重试",
+    "newsContent": "新闻内容",
+    "newsContentDescription": "选择您感兴趣的新闻来源",
+    "pendingSources": "待添加 ({count})",
+    "allSourcesAdded": "已全部添加",
+    "enabledSources": "已启用 ({count}) - 可拖拽排序",
+    "addSourcesFromLeft": "请从左侧添加新闻源",
+    "proFeaturesTitle": "Pro 功能",
+    "proActivatedTitle": "Pro 已激活",
+    "proActivateDescription": "一键激活 Pro，解锁自定义 RSS、完整统计、健康提醒和去广告等能力。",
+    "rssManagement": "RSS 订阅管理",
+    "rssManagementDescription": "添加或移除自定义 RSS 新闻源",
+    "manageSubscriptions": "管理订阅",
+    "adsSettings": "广告设置",
+    "adsSettingsDescription": "管理广告显示偏好",
+    "showAds": "显示广告",
+    "showAdsDescription": "关闭后将不再显示广告"
   },
   "rotation": {
     "pause": "暂停",
@@ -279,7 +304,15 @@
       "exerciseGoalsEnabled": "运动目标",
       "keyboardShortcutsEnabled": "键盘快捷键",
       "cloudSyncEnabled": "云同步"
-    }
+    },
+    "proLoginRequired": "登录后可用",
+    "proLoginRequiredDesc": "请先登录，再切换 Pro 权限。",
+    "toggleFailed": "切换失败",
+    "toggleFailedDesc": "无法更新当前账号的 Pro 状态。",
+    "proActivated": "Pro 已激活",
+    "proActivatedDesc": "当前账号已解锁 Pro 功能。",
+    "revertedToMember": "已切回会员",
+    "revertedToMemberDesc": "当前账号已恢复为会员权限。"
   },
   "features": {
     "title": "功能对比",
@@ -378,5 +411,14 @@
     "noCustomFeeds": "暂无自定义订阅",
     "noCustomFeedsDescription": "您还没有添加任何自定义 RSS 源，或者它们没有内容。前往设置添加。",
     "itNewsAi": "IT 资讯 (AI)"
+  },
+  "dailyBrief": {
+    "title": "每日简报",
+    "readOriginal": "阅读原文",
+    "aiTitle": "AI 资讯",
+    "aiDescription": "人工智能领域最新动态",
+    "trending": "热榜",
+    "trendingLoginPrompt": "登录查看完整热榜",
+    "loginNow": "立即登录"
   }
 }

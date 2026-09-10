@@ -1,8 +1,7 @@
-'use client'
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Bot, ExternalLink, Sparkles } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { AiNewsItem } from '@/lib/api/daily-news'
 
 interface AiBriefCardProps {
@@ -10,6 +9,8 @@ interface AiBriefCardProps {
 }
 
 export function AiBriefCard({ data }: AiBriefCardProps) {
+  const t = useTranslations('dailyBrief')
+
   if (!data || data.length === 0) return null
 
   return (
@@ -17,12 +18,10 @@ export function AiBriefCard({ data }: AiBriefCardProps) {
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-xl font-bold text-transparent">
           <Bot className="h-5 w-5 text-purple-500" />
-          AI News
+          {t('aiTitle')}
           <Sparkles className="ml-auto h-4 w-4 animate-pulse text-yellow-500" />
         </CardTitle>
-        <p className="text-muted-foreground mt-1 font-mono text-xs">
-          Latest updates in Artificial Intelligence
-        </p>
+        <p className="text-muted-foreground mt-1 font-mono text-xs">{t('aiDescription')}</p>
       </CardHeader>
 
       <CardContent className="flex-1 overflow-hidden pt-2">

@@ -400,8 +400,8 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
       {!isGuest && (
         <Card>
           <CardHeader>
-            <CardTitle>新闻内容</CardTitle>
-            <CardDescription>选择您感兴趣的新闻来源</CardDescription>
+            <CardTitle>{t('newsContent')}</CardTitle>
+            <CardDescription>{t('newsContentDescription')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-6 md:grid-cols-2">
@@ -409,8 +409,10 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
-                    待添加 (
-                    {HOT_LIST_SOURCES.filter((s) => !settings.newsSources?.includes(s.id)).length})
+                    {t('pendingSources', {
+                      count: HOT_LIST_SOURCES.filter((s) => !settings.newsSources?.includes(s.id))
+                        .length,
+                    })}
                   </Label>
                 </div>
                 <div className="bg-muted/30 min-h-[300px] rounded-lg border p-2">
@@ -447,7 +449,7 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
                       .length === 0 && (
                       <div className="text-muted-foreground flex h-full flex-col items-center justify-center py-8 text-xs">
                         <Check className="mb-2 h-8 w-8 opacity-20" />
-                        已全部添加
+                        {t('allSourcesAdded')}
                       </div>
                     )}
                   </div>
@@ -458,7 +460,7 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label className="text-primary text-xs font-medium tracking-wider uppercase">
-                    已启用 ({settings.newsSources?.length || 0}) - 可拖拽排序
+                    {t('enabledSources', { count: settings.newsSources?.length || 0 })}
                   </Label>
                 </div>
                 <div className="bg-card min-h-[300px] rounded-lg border p-2">
@@ -509,7 +511,7 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
                     </AnimatePresence>
                     {(settings.newsSources?.length || 0) === 0 && (
                       <div className="text-muted-foreground flex h-full flex-col items-center justify-center py-8 text-xs">
-                        请从左侧添加新闻源
+                        {t('addSourcesFromLeft')}
                       </div>
                     )}
                   </Reorder.Group>
@@ -525,12 +527,10 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-amber-500" />
-              {isPro ? 'Pro 已激活' : 'Pro 功能'}
+              {isPro ? t('proActivatedTitle') : t('proFeaturesTitle')}
             </CardTitle>
             <CardDescription>
-              {isPro
-                ? tFeatures('proCurrentMessage')
-                : '一键激活 Pro，解锁自定义 RSS、完整统计、健康提醒和去广告等能力。'}
+              {isPro ? tFeatures('proCurrentMessage') : t('proActivateDescription')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -553,20 +553,18 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
       {isPro && (
         <Card>
           <CardHeader>
-            <CardTitle>{t('newsSource') || '自定义订阅'}</CardTitle>
-            <CardDescription>
-              {t('newsSourceDescription') || '管理您的自定义 RSS 新闻源'}
-            </CardDescription>
+            <CardTitle>{t('newsSource')}</CardTitle>
+            <CardDescription>{t('newsSourceDescription')}</CardDescription>
           </CardHeader>
           <CardContent>
             {features.customRssEnabled ? (
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label>RSS 订阅管理</Label>
-                  <p className="text-muted-foreground text-sm">添加或移除自定义 RSS 新闻源</p>
+                  <Label>{t('rssManagement')}</Label>
+                  <p className="text-muted-foreground text-sm">{t('rssManagementDescription')}</p>
                 </div>
                 <Button variant="outline" asChild>
-                  <a href="/rss">管理订阅</a>
+                  <a href="/rss">{t('manageSubscriptions')}</a>
                 </Button>
               </div>
             ) : (
@@ -574,13 +572,13 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
                 <div className="flex items-center justify-between opacity-60">
                   <div className="space-y-0.5">
                     <Label className="flex items-center gap-2">
-                      RSS 订阅管理
+                      {t('rssManagement')}
                       <Lock className="text-muted-foreground h-3 w-3" />
                     </Label>
-                    <p className="text-muted-foreground text-sm">添加或移除自定义 RSS 新闻源</p>
+                    <p className="text-muted-foreground text-sm">{t('rssManagementDescription')}</p>
                   </div>
                   <Button variant="outline" disabled>
-                    管理订阅
+                    {t('manageSubscriptions')}
                   </Button>
                 </div>
                 <p className="text-muted-foreground text-xs">{tTier('upgradeToUnlock')}</p>
@@ -593,14 +591,14 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
       {features.adsDisableable && (
         <Card>
           <CardHeader>
-            <CardTitle>广告设置</CardTitle>
-            <CardDescription>管理广告显示偏好</CardDescription>
+            <CardTitle>{t('adsSettings')}</CardTitle>
+            <CardDescription>{t('adsSettingsDescription')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label htmlFor="adsEnabled">显示广告</Label>
-                <p className="text-muted-foreground text-sm">关闭后将不再显示广告</p>
+                <Label htmlFor="adsEnabled">{t('showAds')}</Label>
+                <p className="text-muted-foreground text-sm">{t('showAdsDescription')}</p>
               </div>
               <Switch
                 id="adsEnabled"
@@ -665,9 +663,13 @@ export function SettingsPanel({ initialSettings }: SettingsPanelProps) {
           }}
           className="flex gap-4"
         >
-          <SaveButton label="保存" isPending={isSaving} disabled={isSaving || isResetting} />
+          <SaveButton
+            label={tCommon('save')}
+            isPending={isSaving}
+            disabled={isSaving || isResetting}
+          />
           <ResetButton
-            label="重置"
+            label={tCommon('reset')}
             onClick={handleResetAction}
             isPending={isResetting}
             disabled={isSaving || isResetting}

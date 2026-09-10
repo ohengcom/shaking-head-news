@@ -2,6 +2,7 @@
 
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { createContext, useContext, useState, useTransition } from 'react'
 import {
   type FeatureConfig,
@@ -47,6 +48,7 @@ export function useUserTier(): UseUserTierReturn {
   const { data: session, status } = useSession()
   const { toast } = useToast()
   const router = useRouter()
+  const t = useTranslations('tier')
   const initialTier = useContext(UserTierContext)
   const [forcedTier, setForcedTier] = useState<UserTier | null>(null)
   const [isTogglingPro, startToggleTransition] = useTransition()
@@ -77,8 +79,8 @@ export function useUserTier(): UseUserTierReturn {
   const togglePro = () => {
     if (status !== 'authenticated') {
       toast({
-        title: '登录后可用',
-        description: '请先登录，再切换 Pro 权限。',
+        title: t('proLoginRequired'),
+        description: t('proLoginRequiredDesc'),
         variant: 'destructive',
       })
       return
@@ -89,8 +91,8 @@ export function useUserTier(): UseUserTierReturn {
 
       if (!result.success || !result.tier) {
         toast({
-          title: '切换失败',
-          description: result.error || '无法更新当前账号的 Pro 状态。',
+          title: t('toggleFailed'),
+          description: result.error || t('toggleFailedDesc'),
           variant: 'destructive',
         })
         return
@@ -101,9 +103,8 @@ export function useUserTier(): UseUserTierReturn {
       router.refresh()
 
       toast({
-        title: result.tier === 'pro' ? 'Pro 已激活' : '已切回会员',
-        description:
-          result.tier === 'pro' ? '当前账号已解锁 Pro 功能。' : '当前账号已恢复为会员权限。',
+        title: result.tier === 'pro' ? t('proActivated') : t('revertedToMember'),
+        description: result.tier === 'pro' ? t('proActivatedDesc') : t('revertedToMemberDesc'),
       })
     })
   }

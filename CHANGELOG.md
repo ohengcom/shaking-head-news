@@ -5,6 +5,26 @@ All notable changes to Shaking Head News will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2026.9.10] - 2026-09-10
+
+### Changed
+
+- **Stack Refresh**: Upgraded Next.js tooling alignment to 16.3.4, React to 19.3.0, framer-motion to 13.2.0, zod to 4.6.1, next-intl to 4.14.3, lucide-react to 1.44.0, and refreshed dev tooling patches.
+- **Lockfile Sync**: Regenerated `pnpm-lock.yaml` to match `package.json` so `--frozen-lockfile` CI installs succeed again.
+
+### Fixed
+
+- **Rotation Store**: Stopped persisting the volatile `angle`/`isPaused` state, eliminating a localStorage write on every rotation tick and mousemove and preventing a tilted page from being restored on reload.
+- **Render Purity**: Moved the impure `Date.now()` initialization in `TiltWrapper` out of the render phase.
+- **Error Boundary**: Navigation now uses the Next.js router instead of `window.location.href`, clearing the `no-location-assign-relative-destination` lint warning.
+- **Formatting**: Sorted Tailwind classes in `NewsList` so `prettier --check` passes in CI.
+- **i18n Coverage**: Translated previously hardcoded UI strings in `SettingsPanel`, `NewsList`, `use-user-tier` toasts, `ErrorBoundary`, and the daily-brief cards; en/zh message catalogs remain in full key parity (362 keys each).
+- **Dead Button**: The Trending card "Login Now" button now navigates to `/login` instead of doing nothing.
+
+### Removed
+
+- **Dead Code**: Deleted unused `components/news/RefreshButton.tsx`, `components/dynamic-imports.tsx`, and `components/ui/optimized-image.tsx` (the latter two contained patterns that would break the App Router build if ever imported).
+
 ## [2026.7.3] - 2026-07-03
 
 ### Changed

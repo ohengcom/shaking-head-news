@@ -1,7 +1,8 @@
-import { NewsItem as NewsItemType } from '@/types/news'
+import type { NewsItem as NewsItemType } from '@/types/news'
 import { NewsItem } from './NewsItem'
 import { AlertCircle } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { useTranslations } from 'next-intl'
 
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
@@ -12,12 +13,14 @@ interface NewsListProps {
 }
 
 export function NewsList({ news, showLoginCTA = false }: NewsListProps) {
+  const t = useTranslations('news')
+
   if (!news || news.length === 0) {
     return (
       <Alert>
         <AlertCircle className="h-4 w-4" />
-        <AlertTitle>暂无新闻</AlertTitle>
-        <AlertDescription>当前没有可显示的新闻内容，请稍后再试或刷新页面。</AlertDescription>
+        <AlertTitle>{t('noNews')}</AlertTitle>
+        <AlertDescription>{t('noNewsDescription')}</AlertDescription>
       </Alert>
     )
   }
@@ -33,9 +36,9 @@ export function NewsList({ news, showLoginCTA = false }: NewsListProps) {
 
       {showLoginCTA && (
         <div className="py-6 text-center">
-          <p className="text-muted-foreground mb-3 text-sm">登录获取更多新闻内容</p>
+          <p className="text-muted-foreground mb-3 text-sm">{t('loginForMore')}</p>
           <Button asChild size="sm">
-            <Link href="/login">立即登录</Link>
+            <Link href="/login">{t('loginNow')}</Link>
           </Button>
         </div>
       )}

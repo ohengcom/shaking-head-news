@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Flame, Loader2 } from 'lucide-react'
+import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import { TrendingItem } from '@/lib/api/trending'
 import { getTrending } from '@/lib/actions/trending'
 import { cn } from '@/lib/utils'
@@ -30,6 +32,7 @@ export function TrendingCard({
   const [source, setSource] = useState(initialSource)
   const [data, setData] = useState<TrendingItem[]>(initialData)
   const [isPending, startTransition] = useTransition()
+  const t = useTranslations('dailyBrief')
 
   const handleSourceChange = (newSource: string) => {
     if (newSource === source) return
@@ -49,7 +52,7 @@ export function TrendingCard({
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-xl font-bold text-transparent">
             <Flame className="h-5 w-5 fill-orange-500 text-orange-500" />
-            Trending
+            {t('trending')}
           </CardTitle>
           <div className="flex gap-1">
             {SOURCES.map((s) => (
@@ -121,14 +124,15 @@ export function TrendingCard({
         {!isMember && (
           <div className="from-background via-background/90 absolute inset-x-0 bottom-0 flex h-32 flex-col items-center justify-end bg-gradient-to-t to-transparent pb-8">
             <p className="text-muted-foreground mb-3 text-sm font-medium">
-              Login to see full trending list
+              {t('trendingLoginPrompt')}
             </p>
             <Button
               size="sm"
               variant="default"
               className="bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg shadow-orange-500/20 hover:from-orange-600 hover:to-red-700"
+              asChild
             >
-              Login Now
+              <Link href="/login">{t('loginNow')}</Link>
             </Button>
           </div>
         )}
