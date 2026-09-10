@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { getUserTier } from '@/lib/tier-server'
 
-export const maxDuration = 10
+export const maxDuration = 60
 
 /**
  * 统计页面加载骨架屏

@@ -5,6 +5,18 @@ All notable changes to Shaking Head News will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2026.9.11] - 2026-09-11
+
+### Changed
+
+- **Function Duration**: Raised `maxDuration` from 10s to 60s across all routes. Vercel Fluid Compute (default on Hobby) allows 300s and bills only active CPU time, so the old 10s cap only risked timeouts — worst case, Pro users with 50 RSS sources need ~52s (concurrency 4, 4s timeout per source) to render the home page.
+- **Bundle Analyzer**: Removed the invalid `--serve` flag from `build:analyze`; `next experimental-analyze` starts the local explorer by default.
+
+### Docs
+
+- **Deployment Guide**: Documented Vercel Hobby free-tier specifics (Fluid Compute limits, image optimization fair use, cache persistence, Upstash free tier).
+- **Performance Guide**: Added the function-duration policy section and refreshed the analyzer command reference.
+
 ## [2026.9.10] - 2026-09-10
 
 ### Changed

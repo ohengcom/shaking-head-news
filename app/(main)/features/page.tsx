@@ -8,7 +8,7 @@ import { getTranslations } from 'next-intl/server'
 import { getUserTier } from '@/lib/tier-server'
 import { FeaturesComparison } from './FeaturesComparison'
 
-export const maxDuration = 10
+export const maxDuration = 60
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('features')

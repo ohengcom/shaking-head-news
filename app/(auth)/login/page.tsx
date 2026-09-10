@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { configuredAuthProviders, signIn } from '@/lib/auth'
 
-export const maxDuration = 10
+export const maxDuration = 60
 
 function getLoginErrorMessage(error?: string) {
   switch (error) {

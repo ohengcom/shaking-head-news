@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { recordRotation } from '@/lib/actions/stats'
 
-export const maxDuration = 10
+export const maxDuration = 60
 
 const RotationPayloadSchema = z.object({
   angle: z.number(),

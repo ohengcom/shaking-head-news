@@ -3,7 +3,7 @@ import { SettingsPanel } from '@/components/settings/SettingsPanel'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 
-export const maxDuration = 10
+export const maxDuration = 60
 
 export const metadata = {
   title: '设置 - 摇头看新闻',

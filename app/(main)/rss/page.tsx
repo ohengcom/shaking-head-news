@@ -11,7 +11,7 @@ import { LockedFeature } from '@/components/tier/LockedFeature'
 import { TierFeatureServer } from '@/components/tier/TierFeatureServer'
 import { Badge } from '@/components/ui/badge'
 
-export const maxDuration = 10
+export const maxDuration = 60
 
 async function RSSContent() {
   const { tier, features } = await getUserTier()
